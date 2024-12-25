@@ -12,6 +12,7 @@ import { stat, mkdir, writeFile } from "fs/promises";
 import mime from "mime";
 import _ from "lodash";
 import { getServerSession } from "next-auth";
+import { revalidatePath } from "next/cache";
 
 export async function GET(request: NextRequest) {
   const res = await getAllLaporan();
@@ -97,6 +98,7 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   const req = await request.formData();
+  console.log(req);
   const image = req.get("foto");
   if (image instanceof File) {
     const buffer = Buffer.from(await image.arrayBuffer());

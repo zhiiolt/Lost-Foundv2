@@ -93,7 +93,7 @@ export default function EditLaporan({ jenis }) {
     formData.set("deskripsi", data.deskripsi);
     formData.set("namaBarang", data.namaBarang);
     formData.set("kategori", data.kategori);
-    formData.set("tanggal", data.tanggal ? data.tanggal.toISOString() : "");
+    formData.set("tanggal", data.tanggal ? data.tanggal.toLocaleString() : "");
     formData.set("ciri", data.ciri);
     formData.set("lokasi", data.lokasi);
 

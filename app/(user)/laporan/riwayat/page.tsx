@@ -32,7 +32,6 @@ async function getLaporan() {
 
 export default async function RiwayatLaporanPage() {
   const laporan = await getLaporan();
-  console.log(laporan);
   const breadcrumbs = [
     { title: "Laporan", url: "/laporan" },
     { title: "Laporan Saya" },

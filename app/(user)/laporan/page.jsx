@@ -38,30 +38,17 @@ export const metadata = {
   description: "A task and issue tracker build using Tanstack Table.",
 };
 
-async function getLaporan() {
-  const res = await fetch("http://localhost:3000/api/laporan", {
-    cache: "no-store",
-  });
-  if (res.ok) {
-    const data = await res.json();
-    return data.data;
-  } else {
-    return [];
-  }
-}
-
 export default async function LaporanPage() {
   const breadcrumbs = [
     { title: "Laporan" },
     // halaman terakhir tanpa link
   ];
-  const laporan = await getLaporan();
-  console.log(laporan);
+
   return (
     <div>
       <Header breadcrumbs={breadcrumbs} />
       <div className='p-4 bg-slate-50'>
-        <Laporan laporan={laporan} />
+        <Laporan />
       </div>
     </div>
   );

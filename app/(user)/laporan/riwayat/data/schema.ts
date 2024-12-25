@@ -31,7 +31,7 @@ export const laporanSchema = z.object({
   deskripsi: z.string(),
   namaBarang: z.string(),
   kategori: z.string(),
-  status: z.enum(["hilang", "ditemukan"]),
+  status: z.enum(["hilang", "ditemukan", "dikembalikan"]),
   tanggal: z.string().datetime(),
   ciri: z.string(),
   lokasi: z.string(),

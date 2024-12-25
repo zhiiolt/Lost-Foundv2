@@ -50,11 +50,13 @@ import {
 } from "@tabler/icons-react";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 export default function EditLaporan({ laporan, setIsOpen }) {
   const fileInputRef = useRef(null);
   const [image, setImage] = useState(laporan.fotoUrl);
   const [filename, setFilename] = useState("Hapus Foto");
+  const router = useRouter();
   const defaults = {
     judul: laporan.judul,
     deskripsi: laporan.deskripsi,
@@ -74,6 +76,7 @@ export default function EditLaporan({ laporan, setIsOpen }) {
   });
 
   const onSubmit = async (data) => {
+    console.log(data.tanggal);
     const formData = new FormData();
 
     // Tambahkan semua field ke dalam FormData
@@ -84,7 +87,7 @@ export default function EditLaporan({ laporan, setIsOpen }) {
     formData.set("deskripsi", data.deskripsi);
     formData.set("namaBarang", data.namaBarang);
     formData.set("kategori", data.kategori);
-    formData.set("tanggal", data.tanggal ? data.tanggal.toISOString() : "");
+    formData.set("tanggal", data.tanggal ? data.tanggal.toLocaleString() : "");
     formData.set("ciri", data.ciri);
     formData.set("lokasi", data.lokasi);
 
@@ -101,6 +104,7 @@ export default function EditLaporan({ laporan, setIsOpen }) {
       });
 
       if (res.ok) {
+        router.refresh();
         setIsOpen(false);
         await new Promise((resolve) => setTimeout(resolve, 500));
         toast("", {

@@ -2,6 +2,7 @@
 
 import prisma from "./db";
 import bycrpt from "bcrypt";
+import { convertDateString } from "../time";
 
 export async function registerUser(data: {
   name: string;
@@ -174,7 +175,7 @@ export async function createLaporan(data: any) {
       deskripsi: data.deskripsi,
       namaBarang: data.namaBarang,
       kategori: data.kategori,
-      tanggal: new Date(data.tanggal),
+      tanggal: new Date(convertDateString(data.tanggal)),
       ciri: data.ciri,
       lokasi: data.lokasi,
       fotoUrl: data.fotoUrl,
@@ -204,7 +205,7 @@ export async function updateLaporan(data: any) {
       deskripsi: data.deskripsi,
       namaBarang: data.namaBarang,
       kategori: data.kategori,
-      tanggal: new Date(data.tanggal),
+      tanggal: new Date(convertDateString(data.tanggal)),
       ciri: data.ciri,
       lokasi: data.lokasi,
       fotoUrl: data.fotoUrl,

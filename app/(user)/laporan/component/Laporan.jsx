@@ -25,8 +25,29 @@ import { isThisMonth, isThisWeek, isToday } from "date-fns";
 
 import { CardLaporan } from "./CardLaporan";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useEffect } from "react";
 
-export function Laporan({ laporan }) {
+async function getLaporan() {
+  const res = await fetch("http://localhost:3000/api/laporan", {
+    cache: "no-store",
+  });
+  if (res.ok) {
+    const data = await res.json();
+    return data.data;
+  } else {
+    return [];
+  }
+}
+
+export function Laporan() {
+  const [laporan, setLaporan] = React.useState([]);
+  useEffect(() => {
+    const fetchdata = async () => {
+      const res = await getLaporan();
+      setLaporan(res);
+    };
+    fetchdata();
+  });
   const [filters, setFilters] = React.useState({
     statuses: [],
     kategori: [],
