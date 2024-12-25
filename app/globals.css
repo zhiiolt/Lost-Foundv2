@@ -1,0 +1,100 @@
+/** @format */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Name: custom color palette
+       Author: Ilias Ism
+       URL: https://gradient.page */
+
+    /* CSS: .bg-gradient { background: var(--gradient) } */
+    --background: 175 100% 100%;
+    --foreground: 175 5% 10%;
+    --card: 175 50% 100%;
+    --card-foreground: 175 5% 15%;
+    --popover: 175 100% 100%;
+    --popover-foreground: 175 100% 10%;
+    --primary: 175 77.4% 26.1%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 175 30% 90%;
+    --secondary-foreground: 0 0% 0%;
+    --muted: 137 30% 95%;
+    --muted-foreground: 175 5% 40%;
+    --accent: 137 30% 90%;
+    --accent-foreground: 175 5% 15%;
+    --destructive: 0 100% 50%;
+    --destructive-foreground: 175 5% 100%;
+    --border: 175 30% 82%;
+    --input: 175 30% 50%;
+    --ring: 175 77.4% 26.1%;
+    --radius: 0.5rem;
+
+    --sidebar-background: 176 61% 19%; /* teal-700 (gelap) */
+    --sidebar-foreground: 166 76% 97%; /* teal-50 (terang) */
+
+    /* Primary Colors for Buttons or Active States */
+    --sidebar-primary: 173 80% 40%; /* teal-500 */
+    --sidebar-primary-foreground: 166 76% 97%; /* teal-50 */
+
+    /* Accent Colors for Highlights */
+    --sidebar-accent: 179 84% 10%; /* teal-100 */
+    --sidebar-accent-foreground: 166 76% 97%; /* teal-700 */
+
+    /* Border and Ring */
+    --sidebar-border: 161 94% 30%; /* teal-600 */
+    --sidebar-ring: 173 80% 40%; /* teal-500 */
+
+    --chart-1: 173 58% 39%;
+    --chart-2: 12 76% 61%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+  }
+
+  .dark {
+    --background: 20 14.3% 4.1%;
+    --foreground: 0 0% 95%;
+    --card: 24 9.8% 10%;
+    --card-foreground: 0 0% 95%;
+    --popover: 0 0% 9%;
+    --popover-foreground: 0 0% 95%;
+    --primary: 142.1 70.6% 45.3%;
+    --primary-foreground: 144.9 80.4% 10%;
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 15%;
+    --muted-foreground: 240 5% 64.9%;
+    --accent: 12 6.5% 15.1%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 85.7% 97.3%;
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 142.4 71.8% 29.2%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}

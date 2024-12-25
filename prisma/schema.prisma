@@ -1,0 +1,133 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  fullname  String
+  email     String   @unique
+  username  String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  profile               Profile?
+  laporan               Laporan[]
+  comments              Comment[]
+  likes                 Likes[]
+  notificationsSent     Notification[] @relation("sender")
+  notificationsReceived Notification[] @relation("receiver")
+  logActivities         LogActivity[]
+}
+
+model Profile {
+  userID    String    @unique
+  telp      String?   @db.Char(15)
+  address   String?
+  gender    Gender?
+  birthDate DateTime? @db.Date
+  avatarUrl String?
+  user      User      @relation(fields: [userID], references: [id])
+}
+
+model Laporan {
+  id         String    @id @default(cuid())
+  userId     String
+  jenis      Jenis
+  fotoUrl    String
+  judul      String
+  deskripsi  String    @db.Text
+  namaBarang String
+  kategori   Kategori
+  status     Status    @default(hilang)
+  tanggal    DateTime  @db.Date
+  ciri       String
+  lokasi     String
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  user       User      @relation(fields: [userId], references: [id])
+  comments   Comment[]
+  likes      Likes[]
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  userId    String
+  laporanId String   @unique
+  isi       String   @db.Text
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+  laporan   Laporan  @relation(fields: [laporanId], references: [id])
+}
+
+model Likes {
+  userId    String  @unique
+  laporanId String  @unique
+  user      User    @relation(fields: [userId], references: [id])
+  laporan   Laporan @relation(fields: [laporanId], references: [id])
+}
+
+model Notification {
+  id         String           @id @default(cuid())
+  senderId   String           @unique
+  receiverId String           @unique
+  message    String
+  notifType  NotificationType
+  isRead     Boolean          @default(false)
+  createdAt  DateTime         @default(now())
+  sender     User?            @relation(name: "sender", fields: [senderId], references: [id])
+  receiver   User             @relation(name: "receiver", fields: [receiverId], references: [id])
+}
+
+model LogActivity {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  activity  String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+enum Gender {
+  pria
+  wanita
+}
+
+enum Jenis {
+  kehilangan
+  penemuan
+}
+
+enum Status {
+  hilang
+  ditemukan
+  dikembalikan
+}
+
+enum Kategori {
+  elektronik
+  pakaian
+  dokumen
+  hewan
+  kunci
+  aksesoris
+  kendaraan
+  pencurian
+  barang
+}
+
+enum NotificationType {
+  like
+  comment
+  match
+}
