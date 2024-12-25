@@ -30,18 +30,12 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { signOut, useSession } from "next-auth/react";
+import { getInitials } from "@/lib/initials";
 
-export function NavUser({
-  user,
-}: {
-  user: {
-    name: string;
-    email: string;
-    avatar: string;
-  };
-}) {
+export function NavUser() {
   const { isMobile } = useSidebar();
   const { data: session } = useSession();
+  console.log(getInitials(session?.user.fullname));
 
   return (
     <SidebarMenu>
@@ -53,14 +47,17 @@ export function NavUser({
               className='data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground'>
               <Avatar className='h-8 w-8 rounded-lg'>
                 <AvatarImage
-                  src={session?.user?.image || ""}
-                  alt={session?.user?.name || ""}
+                  src={session?.user?.avatarUrl}
+                  alt={session?.user?.avatarUrl}
+                  className='object-cover'
                 />
-                <AvatarFallback className='rounded-lg'>CN</AvatarFallback>
+                <AvatarFallback className='rounded-lg'>
+                  {getInitials(session?.user.fullname)}
+                </AvatarFallback>
               </Avatar>
               <div className='grid flex-1 text-left text-sm leading-tight'>
                 <span className='truncate font-semibold'>
-                  {session?.user?.name}
+                  {session?.user?.fullname}
                 </span>
                 <span className='truncate text-xs'>{session?.user?.email}</span>
               </div>
@@ -76,15 +73,21 @@ export function NavUser({
               <div className='flex items-center gap-2 px-1 py-1.5 text-left text-sm'>
                 <Avatar className='h-8 w-8 rounded-lg'>
                   <AvatarImage
-                    src={user.avatar}
-                    alt={user.name}
+                    src={session?.user?.avatarUrl}
+                    alt={session?.user?.avatarUrl}
                     className='object-cover'
                   />
-                  <AvatarFallback className='rounded-lg'>CN</AvatarFallback>
+                  <AvatarFallback className='rounded-lg'>
+                    {getInitials(session?.user.fullname)}
+                  </AvatarFallback>
                 </Avatar>
                 <div className='grid flex-1 text-left text-sm leading-tight'>
-                  <span className='truncate font-semibold'>{user.name}</span>
-                  <span className='truncate text-xs'>{user.email}</span>
+                  <span className='truncate font-semibold'>
+                    {session?.user?.fullname}
+                  </span>
+                  <span className='truncate text-xs'>
+                    {session?.user?.email}
+                  </span>
                 </div>
               </div>
             </DropdownMenuLabel>

@@ -1,6 +1,7 @@
 /** @format */
 
 import Header from "@/app/(user)/header";
+import { headers } from "next/headers";
 import { promises as fs } from "fs";
 import path from "path";
 import { Metadata } from "next";
@@ -10,6 +11,7 @@ import { z } from "zod";
 import { columns } from "./components/columns";
 import { DataTable } from "./components/data-table";
 import { laporanSchema } from "./data/schema";
+import { getServerSession } from "next-auth";
 
 export const metadata: Metadata = {
   title: "Lost & Found: Laporan Saya",
@@ -18,9 +20,13 @@ export const metadata: Metadata = {
 
 // Simulate a database read for tasks.
 async function getLaporan() {
-  const res = await fetch("http://localhost:3000/api/laporan", {
-    cache: "no-store",
-  });
+  const session = await getServerSession();
+  const res = await fetch(
+    `http://localhost:3000/api/laporan?email=${session?.user?.email}`,
+    {
+      cache: "no-store",
+    }
+  );
   if (res.ok) {
     const data = await res.json();
 
@@ -32,6 +38,7 @@ async function getLaporan() {
 
 export default async function RiwayatLaporanPage() {
   const laporan = await getLaporan();
+  console.log(laporan);
   const breadcrumbs = [
     { title: "Laporan", url: "/laporan" },
     { title: "Laporan Saya" },

@@ -2,7 +2,9 @@
 
 import {
   createLaporan,
+  deleteLaporan,
   getAllLaporan,
+  getLaporanbyUserId,
   loginUser,
   updateLaporan,
 } from "@/lib/prisma/service";
@@ -15,14 +17,36 @@ import { getServerSession } from "next-auth";
 import { revalidatePath } from "next/cache";
 
 export async function GET(request: NextRequest) {
-  const res = await getAllLaporan();
-  if (res && res.length > 0) {
-    return NextResponse.json({ status: "success", data: res }, { status: 200 });
+  const searchParams = request.nextUrl.searchParams;
+  const email = searchParams.get("email");
+  if (email) {
+    const user = await loginUser({ email });
+    console.log(user);
+    const res = await getLaporanbyUserId(user?.id || "");
+    if (res && res.length > 0) {
+      return NextResponse.json(
+        { status: "success", data: res },
+        { status: 200 }
+      );
+    } else {
+      return NextResponse.json(
+        { status: "error", message: "Data tidak ditemukan" },
+        { status: 404 }
+      );
+    }
   } else {
-    return NextResponse.json(
-      { status: "error", message: "Data tidak ditemukan" },
-      { status: 404 }
-    );
+    const res = await getAllLaporan();
+    if (res && res.length > 0) {
+      return NextResponse.json(
+        { status: "success", data: res },
+        { status: 200 }
+      );
+    } else {
+      return NextResponse.json(
+        { status: "error", message: "Data tidak ditemukan" },
+        { status: 404 }
+      );
+    }
   }
 }
 
@@ -189,5 +213,22 @@ export async function PUT(request: NextRequest) {
         { status: 500 }
       );
     }
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  const searchParams = request.nextUrl.searchParams;
+  const id = searchParams.get("id");
+  const res = await deleteLaporan(id || "");
+  if (res.status) {
+    return NextResponse.json(
+      { status: "success", data: res.data },
+      { status: 200 }
+    );
+  } else {
+    return NextResponse.json(
+      { status: "error", message: "Gagal menghapus laporan" },
+      { status: 500 }
+    );
   }
 }

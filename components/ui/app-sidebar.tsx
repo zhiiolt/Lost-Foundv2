@@ -139,7 +139,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavProjects suggestions={data.suggestions} path={path} />
       </SidebarContent>
       <SidebarFooter className='py-4'>
-        <NavUser user={data.user} />
+        <NavUser />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

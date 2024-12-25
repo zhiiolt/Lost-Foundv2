@@ -26,28 +26,11 @@ import { isThisMonth, isThisWeek, isToday } from "date-fns";
 import { CardLaporan } from "./CardLaporan";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useEffect } from "react";
+import { useSession } from "next-auth/react";
 
-async function getLaporan() {
-  const res = await fetch("http://localhost:3000/api/laporan", {
-    cache: "no-store",
-  });
-  if (res.ok) {
-    const data = await res.json();
-    return data.data;
-  } else {
-    return [];
-  }
-}
-
-export function Laporan() {
-  const [laporan, setLaporan] = React.useState([]);
-  useEffect(() => {
-    const fetchdata = async () => {
-      const res = await getLaporan();
-      setLaporan(res);
-    };
-    fetchdata();
-  });
+export function Laporan({ laporan }) {
+  const { data: session } = useSession();
+  console.log(session);
   const [filters, setFilters] = React.useState({
     statuses: [],
     kategori: [],
@@ -79,13 +62,14 @@ export function Laporan() {
           </TabsList>
 
           <TabsContent value='semua'>
-            <CardLaporan laporan={filteredLaporan} />
+            <CardLaporan laporan={filteredLaporan} filters={filters} />
           </TabsContent>
           <TabsContent value='kehilangan'>
             <CardLaporan
               laporan={filteredLaporan.filter(
                 (item) => item.jenis === "kehilangan"
               )}
+              filters={filters}
             />
           </TabsContent>
           <TabsContent value='penemuan'>
@@ -93,6 +77,7 @@ export function Laporan() {
               laporan={filteredLaporan.filter(
                 (item) => item.jenis === "penemuan"
               )}
+              filters={filters}
             />
           </TabsContent>
         </Tabs>

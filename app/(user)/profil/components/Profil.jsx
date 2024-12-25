@@ -53,6 +53,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { IconEdit } from "@tabler/icons-react";
 import { useSession } from "next-auth/react";
 import { useEffect } from "react";
+import { getInitials } from "@/lib/initials";
 
 export function Profil() {
   const { data: session, status } = useSession();
@@ -99,7 +100,7 @@ export function Profil() {
                 <Avatar className='me-3 object-cover h-20 w-20'>
                   <AvatarImage src={image} className='object-cover' />
                   <AvatarFallback>
-                    {getInitials(session.user.fullName)}
+                    {getInitials(session.user.fullname)}
                   </AvatarFallback>
                 </Avatar>
                 <div className='flex flex-col'>
@@ -483,12 +484,3 @@ export function Profil() {
     </div>
   );
 }
-
-const getInitials = (name) => {
-  if (!name) return "";
-  const words = name.trim().split(" ");
-  const initials = words
-    .map((word) => word.charAt(0).toUpperCase())
-    .slice(0, 2);
-  return initials.join("");
-};

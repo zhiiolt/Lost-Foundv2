@@ -6,6 +6,7 @@ import * as React from "react";
 import { Row } from "@tanstack/react-table";
 import { MapPinned, MoreHorizontal, Send, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Loader2 } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -72,6 +73,7 @@ import {
   IconSquareRoundedLetterLFilled,
 } from "@tabler/icons-react";
 import { Separator } from "@/components/ui/separator";
+import { useRouter } from "next/navigation";
 
 interface DataTableRowActionsProps<TData> {
   row: Row<TData>;
@@ -80,8 +82,10 @@ interface DataTableRowActionsProps<TData> {
 export function DataTableRowActions<TData>({
   row,
 }: DataTableRowActionsProps<TData>) {
+  const router = useRouter();
   const laporan = laporanSchema.parse(row.original);
   const [open, setIsOpen] = React.useState(false);
+  const [isLoading, setIsLoading] = React.useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = React.useState(false);
   const [showDetailDialog, setShowDetailDialog] = React.useState(false);
   const status = statuses.find((s) => s.value === laporan.status);
@@ -136,7 +140,8 @@ export function DataTableRowActions<TData>({
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              Apakah Anda yakin ingin menghapus laporan {laporan.id}?
+              Apakah Anda yakin ingin menghapus laporan{" "}
+              <span className='font-extrabold'>"{laporan.judul}"</span>?
             </AlertDialogTitle>
             <AlertDialogDescription>
               Tindakan ini tidak dapat dibatalkan. Laporan ini tidak akan lagi
@@ -146,22 +151,50 @@ export function DataTableRowActions<TData>({
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <Button
+              disabled={isLoading}
               className='bg-red-600 hover:bg-red-700'
-              onClick={() => {
-                setShowDeleteDialog(false);
-                toast("", {
-                  position: "top-right",
-                  description: (
-                    <div className='flex gap-2 items-center'>
-                      <IconInfoOctagonFilled className='text-red-500' />
-                      <p className='text-slate-950'>
-                        Laporan <span className='font-bold'>{laporan.id}</span>{" "}
-                        berhasil dihapus.
-                      </p>
-                    </div>
-                  ),
-                });
+              onClick={async () => {
+                setIsLoading(true);
+                const res = await fetch(
+                  `http://localhost:3000/api/laporan?id=${laporan.id}`,
+                  {
+                    method: "DELETE",
+                  }
+                );
+                if (res.ok) {
+                  router.refresh();
+                  setShowDeleteDialog(false);
+                  toast("", {
+                    position: "top-right",
+                    description: (
+                      <div className='flex gap-2 items-center'>
+                        <IconInfoOctagonFilled className='text-red-500' />
+                        <p className='text-slate-950'>
+                          Laporan{" "}
+                          <span className='font-bold'>{laporan.judul}</span>{" "}
+                          berhasil dihapus.
+                        </p>
+                      </div>
+                    ),
+                  });
+                } else {
+                  setShowDeleteDialog(false);
+                  toast("", {
+                    position: "top-right",
+                    description: (
+                      <div className='flex gap-2 items-center'>
+                        <IconInfoOctagonFilled className='text-red-500' />
+                        <p className='text-slate-950'>
+                          Laporan{" "}
+                          <span className='font-bold'>{laporan.judul}</span>{" "}
+                          gagal dihapus.
+                        </p>
+                      </div>
+                    ),
+                  });
+                }
               }}>
+              {isLoading && <Loader2 className='animate-spin' />}
               Delete
             </Button>
           </AlertDialogFooter>

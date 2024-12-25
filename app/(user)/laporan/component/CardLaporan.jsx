@@ -34,13 +34,17 @@ import { IconMessageCircle2Filled } from "@tabler/icons-react";
 import { DialogLaporan } from "./DialogLaporan";
 import { IconSearch } from "@tabler/icons-react";
 import { timeAgo } from "../../../../lib/time";
+import { Loader2 } from "lucide-react";
+import { useSession } from "next-auth/react";
 
-export function CardLaporan({ laporan }) {
+export function CardLaporan({ laporan, filters }) {
   const breadcrumbs = [
     { title: "Laporan" },
     // halaman terakhir tanpa link
   ];
-
+  console.log(laporan);
+  const { data: session } = useSession();
+  console.log(session);
   const findstatus = (item) => {
     return statuses.find((s) => s.value === item.status);
   };
@@ -72,7 +76,16 @@ export function CardLaporan({ laporan }) {
             onChange={(e) => setFilterText(e.target.value)}
           />
         </div>
-
+        {laporan.length == 0 &&
+          filters.statuses.length === 0 &&
+          filters.kategori.length === 0 &&
+          filters.waktu === "semua" && (
+            <div className='text-center text-slate-500 relative min-h-96'>
+              <p className='text-sm font-medium absolute left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%]'>
+                <Loader2 className='animate-spin' />
+              </p>
+            </div>
+          )}
         {laporan
           .filter(
             (item) =>
@@ -195,12 +208,13 @@ export function CardLaporan({ laporan }) {
                         </TooltipProvider>
                       </span>
                     </div>
-
-                    <Button
-                      className={`w-full disabled:cursor-not-allowed disabled:hover:cursor-not-allowed`}
-                      disabled={item.status !== "hilang"}>
-                      <IconMessageCircle2Filled /> Hubungi Pelapor
-                    </Button>
+                    {session?.user?.email !== item.user.email && (
+                      <Button
+                        className={`w-full disabled:cursor-not-allowed disabled:hover:cursor-not-allowed`}
+                        disabled={item.status !== "hilang"}>
+                        <IconMessageCircle2Filled /> Hubungi Pelapor
+                      </Button>
+                    )}
                   </div>
                 </CardContent>
               </Card>

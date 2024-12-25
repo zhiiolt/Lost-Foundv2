@@ -26,7 +26,7 @@ export const laporanSchema = z.object({
   id: z.string(),
   userId: z.string(),
   jenis: z.enum(["kehilangan", "penemuan"]),
-  fotoUrl: z.string(),
+  fotoUrl: z.string().nullable(),
   judul: z.string(),
   deskripsi: z.string(),
   namaBarang: z.string(),

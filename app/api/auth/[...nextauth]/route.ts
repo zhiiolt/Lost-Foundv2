@@ -28,13 +28,20 @@ const authOptions: NextAuthOptions = {
         if (user) {
           const passwordConfirm = await compare(password, user.password);
           if (passwordConfirm) {
-            return user;
-          } else {
-            return null;
+            return {
+              id: user.id,
+              fullname: user.fullname,
+              email: user.email,
+              username: user.username,
+              telp: user.profile?.telp || null,
+              address: user.profile?.address || null,
+              gender: user.profile?.gender || null,
+              birthdate: user.profile?.birthdate || null,
+              avatarUrl: user.profile?.avatarUrl || null,
+            };
           }
-        } else {
-          return null;
         }
+        return null;
       },
     }),
     GoogleProvider({
@@ -44,72 +51,66 @@ const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     async jwt({ token, account, profile, user }: any) {
-      if (account?.provider === "credentials") {
-        token.id = user.id;
-        token.fullname = user.fullname;
-        token.email = user.email;
-        token.username = user.username;
-        token.telp = user.profile?.telp;
-        token.address = user.profile?.address;
-        token.gender = user.profile?.gender;
-        token.birthdate = user.profile?.birthdate;
-        token.avatarUrl = user.profile?.avatarUrl;
+      // Merge data for Credentials login
+      if (account?.provider === "credentials" && user) {
+        token = {
+          id: user.id,
+          fullname: user.fullname,
+          email: user.email,
+          username: user.username,
+          telp: user.telp,
+          address: user.address,
+          gender: user.gender,
+          birthdate: user.birthdate,
+          avatarUrl: user.avatarUrl,
+        };
       }
-      if (account?.provider === "google") {
-        console.log("Profile from Google:", profile);
-        const data = {
+
+      // Merge data for Google login
+      if (account?.provider === "google" && profile) {
+        const result: any = await loginWithGoogle({
           id: profile.sub,
           name: profile.name,
           email: profile.email,
           image: profile.picture,
           type: "google",
-        };
-        await loginWithGoogle(data, (result: any) => {
-          console.log(result);
-          if (result.status) {
-            token.id = result.data.id;
-            token.fullname = result.data.fullname;
-            token.email = result.data.email;
-            token.username = result.data.username;
-            token.telp = result.data.profile.telp;
-            token.address = result.data.profile.address;
-            token.gender = result.data.profile.gender;
-            token.birthdate = result.data.profile.birthdate;
-            token.avatarUrl = result.data.profile.avatarUrl;
-          }
         });
+        console.log(result);
+
+        if (result?.status) {
+          token = {
+            id: result.data.id,
+            fullname: result.data.fullname,
+            email: result.data.email,
+            username: result.data.username,
+            telp: result.data.profile?.telp || null,
+            address: result.data.profile?.address || null,
+            gender: result.data.profile?.gender || null,
+            birthdate: result.data.profile?.birthdate || null,
+            avatarUrl: result.data.profile?.avatarUrl || null,
+          };
+        }
       }
+
       return token;
     },
     async session({ session, token }: any) {
-      if ("id" in token) {
-        session.user.id = token.id;
-      }
-      if ("fullname" in token) {
-        session.user.fullname = token.fullname;
-      }
-      if ("email" in token) {
-        session.user.email = token.email;
-      }
-      if ("username" in token) {
-        session.user.username = token.username;
-      }
-      if ("telp" in token) {
-        session.user.telp = token.telp;
-      }
-      if ("address" in token) {
-        session.user.address = token.address;
-      }
-      if ("gender" in token) {
-        session.user.gender = token.gender;
-      }
-      if ("birthdate" in token) {
-        session.user.birthdate = token.birthdate;
-      }
-      if ("avatarUrl" in token) {
-        session.user.avatarUrl = token.avatarUrl;
-      }
-      return session;
+      // Populate session.user from token
+      return {
+        ...session,
+        user: {
+          ...session.user,
+          id: token.id,
+          fullname: token.fullname,
+          email: token.email,
+          username: token.username,
+          telp: token.telp,
+          address: token.address,
+          gender: token.gender,
+          birthdate: token.birthdate,
+          avatarUrl: token.avatarUrl,
+        },
+      };
     },
   },
   pages: {
