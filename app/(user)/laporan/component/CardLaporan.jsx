@@ -36,15 +36,28 @@ import { IconSearch } from "@tabler/icons-react";
 import { timeAgo } from "../../../../lib/time";
 import { Loader2 } from "lucide-react";
 import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 export function CardLaporan({ laporan, filters }) {
+  const { data: session } = useSession();
+  const isLike = (item) => {
+    const like = item.find((like) => like.userId === session?.user?.id);
+    console.log(like);
+    if (like) {
+      return { status: true, data: like };
+    } else {
+      return { status: false };
+    }
+  };
+  const router = useRouter();
+
   const breadcrumbs = [
     { title: "Laporan" },
     // halaman terakhir tanpa link
   ];
-  console.log(laporan);
-  const { data: session } = useSession();
-  console.log(session);
+
+  laporan.map((item) => console.log(isLike(item.likes)));
+
   const findstatus = (item) => {
     return statuses.find((s) => s.value === item.status);
   };
@@ -181,8 +194,49 @@ export function CardLaporan({ laporan, filters }) {
                       Ciri-Ciri: {item.ciri}
                     </p>
                     <div className='flex gap-2'>
-                      <span className='flex text-pink-700 gap-1 text-sm items-center'>
+                      <span
+                        className={`${
+                          isLike(item.likes).status
+                            ? "text-pink-700"
+                            : "text-slate-400"
+                        } flex gap-1 text-sm items-center`}>
                         <Button
+                          onClick={async () => {
+                            const datum = isLike(item.likes);
+                            if (datum.status) {
+                              const res = await fetch(
+                                "http://localhost:3000/api/likes",
+                                {
+                                  method: "POST",
+                                  body: JSON.stringify({
+                                    id: datum.data.id,
+                                    laporanId: item.id,
+                                    userId: session?.user?.id,
+                                    likes: "false",
+                                  }),
+                                }
+                              );
+                              if (res.ok) {
+                                router.refresh();
+                              }
+                            } else {
+                              const res = await fetch(
+                                "http://localhost:3000/api/likes",
+                                {
+                                  method: "POST",
+                                  body: JSON.stringify({
+                                    laporanId: item.id,
+                                    userId: session?.user?.id,
+                                    likes: "true",
+                                  }),
+                                }
+                              );
+                              if (res.ok) {
+                                router.refresh();
+                              }
+                            }
+                          }}
+                          type='button'
                           variant='ghost'
                           className='hover:bg-white hover:text-pink-300 px-2'>
                           <IconHeartFilled className='h-6' />{" "}

@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
   const email = searchParams.get("email");
   if (email) {
     const user = await loginUser({ email });
-    console.log(user);
+
     const res = await getLaporanbyUserId(user?.id || "");
     if (res && res.length > 0) {
       return NextResponse.json(
@@ -37,6 +37,7 @@ export async function GET(request: NextRequest) {
   } else {
     const res = await getAllLaporan();
     if (res && res.length > 0) {
+      console.log("berhasil");
       return NextResponse.json(
         { status: "success", data: res },
         { status: 200 }

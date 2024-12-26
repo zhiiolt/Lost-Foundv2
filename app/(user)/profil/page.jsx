@@ -3,6 +3,7 @@
 import Header from "@/app/(user)/header";
 import { Profil } from "./components/Profil";
 import photo from "@/assets/avatar/olly.jpg";
+import { getServerSession } from "next-auth";
 
 export const metadata = {
   title: "Lost & Found: Profil",
