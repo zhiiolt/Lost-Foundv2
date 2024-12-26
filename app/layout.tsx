@@ -38,12 +38,12 @@ export default async function RootLayout({
     <html lang='en'>
       <body
         className={`${inter.className} ${geistMono.variable} antialiased bg-[#EAEEFE]`}>
-        <ReactQueryProvider>
-          <Providers session={session}>
+        <Providers session={session}>
+          <ReactQueryProvider>
             {children}
             <Toaster />
-          </Providers>
-        </ReactQueryProvider>
+          </ReactQueryProvider>
+        </Providers>
       </body>
     </html>
   );

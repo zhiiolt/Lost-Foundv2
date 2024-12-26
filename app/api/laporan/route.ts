@@ -35,9 +35,11 @@ export async function GET(request: NextRequest) {
       );
     }
   } else {
-    const res = await getAllLaporan();
-    if (res && res.length > 0) {
-      console.log("berhasil");
+    const cursor = request.nextUrl.searchParams.get("cursor") || undefined;
+    const pageSize = 1;
+    const res = await getAllLaporan(cursor, pageSize);
+
+    if (res && res.laporan.length > 0) {
       return NextResponse.json(
         { status: "success", data: res },
         { status: 200 }

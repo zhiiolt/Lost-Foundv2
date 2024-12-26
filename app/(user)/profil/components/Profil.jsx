@@ -54,7 +54,7 @@ import { IconEdit } from "@tabler/icons-react";
 import { useSession } from "next-auth/react";
 import { useEffect } from "react";
 import { getInitials } from "@/lib/initials";
-
+import { Suspense } from "react";
 export function Profil() {
   const { data: session, status } = useSession();
   console.log(session);

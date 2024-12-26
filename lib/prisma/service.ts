@@ -152,7 +152,7 @@ export async function findUserbyEmail(email: any) {
   }
 }
 
-export async function getAllLaporan() {
+export async function getAllLaporan(cursor: any, pagesize: number) {
   const laporan = await prisma.laporan.findMany({
     include: {
       user: {
@@ -172,11 +172,17 @@ export async function getAllLaporan() {
       },
     },
     orderBy: {
-      tanggal: "desc",
+      createdAt: "desc",
     },
+    take: pagesize + 1,
+    cursor: cursor ? { id: cursor } : undefined,
   });
   if (laporan) {
-    return laporan;
+    const nextCursor = laporan.length > pagesize ? laporan[pagesize].id : null;
+    return {
+      laporan: laporan.slice(0, pagesize),
+      nextCursor,
+    };
   } else {
     return null;
   }

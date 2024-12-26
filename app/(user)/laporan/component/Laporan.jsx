@@ -1,7 +1,7 @@
 /** @format */
 "use client";
 import * as React from "react";
-import { ChevronsUpDown } from "lucide-react";
+import { ChevronsUpDown, Loader2 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -20,67 +20,139 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { kategori, statuses, jenis } from "@/schema/enum";
+import { kategori, statuses } from "@/schema/enum";
 import { isThisMonth, isThisWeek, isToday } from "date-fns";
 
 import { CardLaporan } from "./CardLaporan";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useEffect } from "react";
 import { useSession } from "next-auth/react";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import { Suspense } from "react";
 
-export function Laporan({ laporan }) {
-  const { data: session } = useSession();
-  console.log(session);
+async function getLaporan() {
+  const res = await fetch("http://localhost:3000/api/laporan", {
+    cache: "no-store",
+  });
+  if (res.ok) {
+    const data = await res.json();
+    return data.data;
+  } else {
+    return [];
+  }
+}
+
+export function Laporan() {
+  const {
+    data,
+    status,
+    fetchNextPage,
+    hasNextPage,
+    isFetching,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
+    queryKey: ["laporan-data"],
+    queryFn: async ({ pageParam }) => {
+      const res = await fetch(
+        `http://localhost:3000/api/laporan${
+          pageParam ? `?cursor=${pageParam}` : ""
+        }`
+      );
+      if (res.ok) {
+        const data = await res.json();
+        return data.data;
+      } else {
+        return [];
+      }
+    },
+    initialPageParam: null,
+    getNextPageParam: (lastPage) => lastPage.nextCursor,
+  });
+
+  if (status === "loading") {
+    return <Loader2 className='mx-auto animate-spin' />;
+  }
+
+  if (status === "error") {
+    return <div className='text-red-500'>Failed to load data</div>;
+  }
   const [filters, setFilters] = React.useState({
     statuses: [],
     kategori: [],
     waktu: "semua",
   });
-  const filteredLaporan = laporan.filter((item) => {
-    const filterStatus =
-      filters.statuses.length === 0 || filters.statuses.includes(item.status);
 
-    const filterKategori =
-      filters.kategori.length === 0 || filters.kategori.includes(item.kategori);
+  const filteredLaporan =
+    status === "success"
+      ? data.pages
+          .flatMap((page) => page.laporan)
+          .filter((item) => {
+            const filterStatus =
+              filters.statuses.length === 0 ||
+              filters.statuses.includes(item.status);
 
-    const filterWaktu =
-      filters.waktu === "semua" ||
-      (filters.waktu === "hari" && isToday(new Date(item.tanggal))) ||
-      (filters.waktu === "minggu" && isThisWeek(new Date(item.tanggal))) ||
-      (filters.waktu === "bulan" && isThisMonth(new Date(item.tanggal)));
+            const filterKategori =
+              filters.kategori.length === 0 ||
+              filters.kategori.includes(item.kategori);
 
-    return filterStatus && filterKategori && filterWaktu;
-  });
+            const filterWaktu =
+              filters.waktu === "semua" ||
+              (filters.waktu === "hari" && isToday(new Date(item.tanggal))) ||
+              (filters.waktu === "minggu" &&
+                isThisWeek(new Date(item.tanggal))) ||
+              (filters.waktu === "bulan" &&
+                isThisMonth(new Date(item.tanggal)));
+
+            return filterStatus && filterKategori && filterWaktu;
+          })
+      : [];
+
   return (
     <div className='p-4 bg-slate-50 grid grid-cols-1 md:grid-cols-3 gap-4'>
       <div className='md:col-span-2'>
-        <Tabs defaultValue='semua' className='space-y-8'>
-          <TabsList>
-            <TabsTrigger value='semua'>Semua</TabsTrigger>
-            <TabsTrigger value='kehilangan'>Kehilangan</TabsTrigger>
-            <TabsTrigger value='penemuan'>Penemuan</TabsTrigger>
-          </TabsList>
+        <Suspense children={<Loader2 className='mx-auto animate-spin' />}>
+          <Tabs defaultValue='semua' className='space-y-8'>
+            <TabsList>
+              <TabsTrigger value='semua'>Semua</TabsTrigger>
+              <TabsTrigger value='kehilangan'>Kehilangan</TabsTrigger>
+              <TabsTrigger value='penemuan'>Penemuan</TabsTrigger>
+            </TabsList>
 
-          <TabsContent value='semua'>
-            <CardLaporan laporan={filteredLaporan} filters={filters} />
-          </TabsContent>
-          <TabsContent value='kehilangan'>
-            <CardLaporan
-              laporan={filteredLaporan.filter(
-                (item) => item.jenis === "kehilangan"
-              )}
-              filters={filters}
-            />
-          </TabsContent>
-          <TabsContent value='penemuan'>
-            <CardLaporan
-              laporan={filteredLaporan.filter(
-                (item) => item.jenis === "penemuan"
-              )}
-              filters={filters}
-            />
-          </TabsContent>
-        </Tabs>
+            <TabsContent value='semua'>
+              <CardLaporan
+                laporan={filteredLaporan}
+                filters={filters}
+                fetchNext={fetchNextPage}
+                hasNextPage={hasNextPage}
+                isFetching={isFetching}
+                isFetchingNextPage={isFetchingNextPage}
+              />
+            </TabsContent>
+            <TabsContent value='kehilangan'>
+              <CardLaporan
+                laporan={filteredLaporan.filter(
+                  (item) => item.jenis === "kehilangan"
+                )}
+                filters={filters}
+                fetchNext={fetchNextPage}
+                hasNextPage={hasNextPage}
+                isFetching={isFetching}
+                isFetchingNextPage={isFetchingNextPage}
+              />
+            </TabsContent>
+            <TabsContent value='penemuan'>
+              <CardLaporan
+                laporan={filteredLaporan.filter(
+                  (item) => item.jenis === "penemuan"
+                )}
+                filters={filters}
+                fetchNext={fetchNextPage}
+                hasNextPage={hasNextPage}
+                isFetching={isFetching}
+                isFetchingNextPage={isFetchingNextPage}
+              />
+            </TabsContent>
+          </Tabs>
+        </Suspense>
       </div>
       <div className='md:col-span-1'>
         <FilterBox filters={filters} setFilters={setFilters} />
@@ -94,8 +166,8 @@ const FilterBox = ({ filters, setFilters }) => {
     setFilters((prev) => {
       const currentValues = prev[type];
       const updatedValues = currentValues.includes(value)
-        ? currentValues.filter((v) => v !== value) // Hapus jika sudah ada
-        : [...currentValues, value]; // Tambah jika belum ada
+        ? currentValues.filter((v) => v !== value)
+        : [...currentValues, value];
       return { ...prev, [type]: updatedValues };
     });
   };
@@ -135,9 +207,7 @@ const FilterBox = ({ filters, setFilters }) => {
                     handleCheckboxChange("statuses", status.value)
                   }
                 />
-                <Label
-                  htmlFor={status.value}
-                  className='text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70'>
+                <Label htmlFor={status.value} className='text-sm leading-none'>
                   {status.label}
                 </Label>
               </div>
@@ -167,9 +237,7 @@ const FilterBox = ({ filters, setFilters }) => {
                     handleCheckboxChange("kategori", kat.value);
                   }}
                 />
-                <Label
-                  htmlFor={kat.value}
-                  className='text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70'>
+                <Label htmlFor={kat.value} className='text-sm leading-none'>
                   {kat.label}
                 </Label>
               </div>
@@ -193,33 +261,25 @@ const FilterBox = ({ filters, setFilters }) => {
             <RadioGroup value={filters.waktu} onValueChange={handleRadioChange}>
               <div className='flex items-center space-x-2'>
                 <RadioGroupItem value='semua' id='r1' />
-                <Label
-                  htmlFor='r1'
-                  className='text-sm leading-none font-normal'>
+                <Label htmlFor='r1' className='text-sm leading-none'>
                   Semua waktu
                 </Label>
               </div>
               <div className='flex items-center space-x-2'>
                 <RadioGroupItem value='hari' id='r2' />
-                <Label
-                  htmlFor='r2'
-                  className='text-sm leading-none font-normal'>
+                <Label htmlFor='r2' className='text-sm leading-none'>
                   Hari ini
                 </Label>
               </div>
               <div className='flex items-center space-x-2'>
                 <RadioGroupItem value='minggu' id='r3' />
-                <Label
-                  htmlFor='r3'
-                  className='text-sm leading-none font-normal'>
+                <Label htmlFor='r3' className='text-sm leading-none'>
                   Minggu ini
                 </Label>
               </div>
               <div className='flex items-center space-x-2'>
                 <RadioGroupItem value='bulan' id='r4' />
-                <Label
-                  htmlFor='r4'
-                  className='text-sm leading-none font-normal'>
+                <Label htmlFor='r4' className='text-sm leading-none'>
                   Bulan ini
                 </Label>
               </div>

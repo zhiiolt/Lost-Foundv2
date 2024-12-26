@@ -31,11 +31,13 @@ import {
 } from "@/components/ui/sidebar";
 import { signOut, useSession } from "next-auth/react";
 import { getInitials } from "@/lib/initials";
+import { useQueryClient } from "@tanstack/react-query";
 
 export function NavUser() {
   const { isMobile } = useSidebar();
   const { data: session } = useSession();
   console.log(getInitials(session?.user.fullname));
+  const queryClient = useQueryClient();
 
   return (
     <SidebarMenu>
@@ -105,7 +107,10 @@ export function NavUser() {
             <DropdownMenuSeparator />
             <DropdownMenuItem
               className='hover:cursor-pointer hover:bg-red-500'
-              onSelect={() => signOut()}>
+              onSelect={() => {
+                queryClient.clear();
+                signOut();
+              }}>
               <LogOut />
               Log out
             </DropdownMenuItem>
