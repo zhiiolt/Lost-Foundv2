@@ -39,6 +39,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import InfiniteScrollContainer from "../../../../components/ui/InfiniteScrollContainer";
 import { getInitials } from "@/lib/initials";
+import { useQueryClient } from "@tanstack/react-query";
 
 export function CardLaporan({
   laporan,
@@ -49,9 +50,10 @@ export function CardLaporan({
   isFetchingNextPage,
 }) {
   const { data: session } = useSession();
+  const queryClient = useQueryClient();
   const isLike = (item) => {
     const like = item.find((like) => like.userId === session?.user?.id);
-    console.log(like);
+
     if (like) {
       return { status: true, data: like };
     } else {
@@ -264,7 +266,9 @@ export function CardLaporan({
                                 <Button
                                   variant='ghost'
                                   className='px-2'
-                                  onClick={() => handleOpenDialog(item)}>
+                                  onClick={() => {
+                                    handleOpenDialog(item);
+                                  }}>
                                   <IconMessage2Filled className='h-6' />{" "}
                                   {item.comments.length}
                                 </Button>

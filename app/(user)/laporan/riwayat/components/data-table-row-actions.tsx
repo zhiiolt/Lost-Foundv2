@@ -82,6 +82,7 @@ interface DataTableRowActionsProps<TData> {
 export function DataTableRowActions<TData>({
   row,
 }: DataTableRowActionsProps<TData>) {
+  console.log(row);
   const router = useRouter();
   const laporan = laporanSchema.parse(row.original);
   const [open, setIsOpen] = React.useState(false);
@@ -164,6 +165,7 @@ export function DataTableRowActions<TData>({
                 if (res.ok) {
                   router.refresh();
                   setShowDeleteDialog(false);
+                  setIsLoading(false);
                   toast("", {
                     position: "top-right",
                     description: (
@@ -179,6 +181,7 @@ export function DataTableRowActions<TData>({
                   });
                 } else {
                   setShowDeleteDialog(false);
+                  setIsLoading(false);
                   toast("", {
                     position: "top-right",
                     description: (
@@ -201,7 +204,7 @@ export function DataTableRowActions<TData>({
         </AlertDialogContent>
       </AlertDialog>
       <DialogLaporan
-        laporan={laporan}
+        laporan={row.original}
         open={showDetailDialog}
         setIsOpen={setShowDetailDialog}
       />

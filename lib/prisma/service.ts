@@ -162,7 +162,11 @@ export async function getAllLaporan(cursor: any, pagesize: number) {
       },
       comments: {
         include: {
-          user: true,
+          user: {
+            include: {
+              profile: true,
+            },
+          },
         },
       },
       likes: {
@@ -199,7 +203,15 @@ export async function getLaporanbyUserId(id: string) {
           profile: true,
         },
       },
-      comments: true,
+      comments: {
+        include: {
+          user: {
+            include: {
+              profile: true,
+            },
+          },
+        },
+      },
       likes: true,
     },
     orderBy: {
@@ -270,16 +282,31 @@ export async function updateLaporan(data: any) {
 }
 
 export async function deleteLaporan(id: string) {
-  const laporan = await prisma.laporan.delete({
+  const deleteComment = prisma.comment.deleteMany({
+    where: {
+      laporanId: id,
+    },
+  });
+  const deleteLikes = prisma.likes.deleteMany({
+    where: {
+      laporanId: id,
+    },
+  });
+  const deleteLaporan = prisma.laporan.delete({
     where: {
       id: id,
     },
   });
-  if (laporan) {
+  const transaction = await prisma.$transaction([
+    deleteComment,
+    deleteLikes,
+    deleteLaporan,
+  ]);
+  if (transaction) {
     return {
       status: true,
       message: "Laporan berhasil dihapus",
-      data: laporan,
+      data: transaction,
     };
   } else {
     return {
@@ -327,5 +354,105 @@ export async function likes(toLike: boolean, data: any) {
         message: "Failed to unlike",
       };
     }
+  }
+}
+
+export async function getComment(
+  cursor: any,
+  pagesize: number,
+  laporanId: any
+) {
+  const komentar = await prisma.comment.findMany({
+    where: {
+      laporanId: laporanId,
+    },
+    include: {
+      user: {
+        include: {
+          profile: true,
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "asc",
+    },
+    take: pagesize + 1,
+    cursor: cursor ? { id: cursor } : undefined,
+  });
+  if (komentar) {
+    const nextCursor =
+      komentar.length > pagesize ? komentar[pagesize].id : null;
+    return {
+      komentar: komentar.slice(0, pagesize),
+      nextCursor,
+    };
+  } else {
+    return null;
+  }
+}
+
+export async function addComment(data: any) {
+  const res = await prisma.comment.create({
+    data: {
+      laporanId: data.laporanId,
+      userId: data.userId,
+      isi: data.isi,
+    },
+    include: {
+      user: {
+        include: {
+          profile: true,
+        },
+      },
+    },
+  });
+  if (res) {
+    return {
+      status: true,
+      message: "Comment added",
+      data: res,
+    };
+  } else {
+    return {
+      status: false,
+      message: "Failed to add comment",
+    };
+  }
+}
+
+export async function updateProfil(data: any) {
+  console.log(data.birthdate);
+  const user = await prisma.user.update({
+    where: {
+      id: data.id,
+    },
+    data: {
+      fullname: data.fullname,
+      email: data.email,
+      username: data.username,
+      profile: {
+        update: {
+          telp: data.telp ? data.telp : null,
+          address: data.address ? data.address : null,
+          gender: data.gender ? data.gender : null,
+          birthDate: data.birthdate
+            ? new Date(convertDateString(data.birthdate))
+            : null,
+          avatarUrl: data.avatarUrl,
+        },
+      },
+    },
+    include: {
+      profile: true,
+    },
+  });
+  if (user) {
+    return {
+      status: true,
+      message: "Profil berhasil diupdate",
+      data: user,
+    };
+  } else {
+    return { status: false, message: "Gagal mengedit profil" };
   }
 }

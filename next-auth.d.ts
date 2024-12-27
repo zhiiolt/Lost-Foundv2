@@ -13,6 +13,7 @@ declare module "next-auth" {
     gender?: string;
     birthdate?: string;
     avatarUrl?: string;
+    type: string;
   }
 
   interface Session {

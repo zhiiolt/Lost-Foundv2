@@ -20,9 +20,11 @@ export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const email = searchParams.get("email");
   if (email) {
+    console.log("sini");
     const user = await loginUser({ email });
 
     const res = await getLaporanbyUserId(user?.id || "");
+    console.log(res);
     if (res && res.length > 0) {
       return NextResponse.json(
         { status: "success", data: res },
@@ -204,6 +206,7 @@ export async function PUT(request: NextRequest) {
       lokasi: req.get("lokasi"),
       fotoUrl: req.get("foto"),
     };
+    console.log(newLaporan.tanggal);
     const result = await updateLaporan(newLaporan);
     if (result.status) {
       return NextResponse.json(

@@ -4,7 +4,7 @@
 
 import * as React from "react";
 
-import { MapPinned, MoreHorizontal, Send, X } from "lucide-react";
+import { Loader2, MapPinned, MoreHorizontal, Send, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import Image from "next/image";
 import { Input } from "@/components/ui/input";
@@ -38,11 +38,41 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { timeAgo } from "../../../../lib/time";
 import { useSession } from "next-auth/react";
+import { useSubmitCommentMutation } from "@/lib/mutation/mutation";
 
 export function DialogLaporan({ laporan, open, setIsOpen }) {
   const status = statuses.find((s) => s.value === laporan.status);
   const formattedDate = formatDate(laporan.tanggal);
   const { data: session } = useSession();
+  const commentEndRef = React.useRef(null);
+  const scrollToBottom = () => {
+    commentEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+  React.useEffect(() => {
+    scrollToBottom();
+  }, [laporan.comments.length]);
+
+  const [text, setText] = React.useState("");
+
+  const mutation = useSubmitCommentMutation();
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setText("");
+    mutation.mutate(
+      {
+        laporanId: laporan.id,
+        userId: session.user.id,
+        isi: text,
+      },
+      {
+        onSuccess: (newComment) => {
+          console.log(newComment);
+          laporan.comments.push(newComment);
+        },
+      }
+    );
+  };
 
   return (
     <>
@@ -154,85 +184,72 @@ export function DialogLaporan({ laporan, open, setIsOpen }) {
 
           <Separator />
 
-          <div className='flex flex-col gap-4 px-4 py-6 rounded-lg  max-h-[300px] overflow-y-scroll'>
-            <div className='flex items-start gap-2'>
-              <Avatar className='object-cover'>
-                <AvatarImage
-                  src={session.user.image}
-                  className='object-cover'
-                />
-                <AvatarFallback>CN</AvatarFallback>
-              </Avatar>
-              <div>
-                <div className='flex flex-col bg-slate-200 rounded-lg px-4 py-2'>
-                  <span className='text-sm font-semibold'>Reyhan Putra</span>
-                  <p className='text-sm text-slate-700'>
-                    Wah saya melihatnya kemarin di gedung E
-                  </p>
+          <div className='flex flex-col gap-4 px-4 pt-6 pb-0 rounded-lg  max-h-[300px] overflow-y-scroll'>
+            {laporan.comments.length > 0 ? (
+              laporan.comments.map((comment) => (
+                <div className='flex items-start gap-2' key={comment.id}>
+                  <Avatar className='object-cover'>
+                    <AvatarImage
+                      src={comment.user.profile.avatarUrl}
+                      className='object-cover'
+                    />
+                    <AvatarFallback>
+                      {getInitials(comment.user.fullname)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <div className='flex flex-col bg-slate-200 rounded-lg px-4 py-2'>
+                      <span className='text-sm font-semibold'>
+                        {comment.user.fullname}
+                      </span>
+                      <p className='text-sm text-slate-700'>{comment.isi}</p>
+                    </div>
+                    <span className='text-xs text-slate-400'>
+                      {timeAgo(comment.createdAt)}
+                    </span>
+                  </div>
                 </div>
-                <span className='text-xs text-slate-400'>3 jam lalu</span>
+              ))
+            ) : (
+              <div className='text-center text-slate-500 relative py-8'>
+                <p className='text-sm font-medium absolute left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%]'>
+                  Belum ada komentar
+                </p>
               </div>
-            </div>
-            <div className='flex items-start gap-2'>
-              <Avatar className='object-cover'>
-                <AvatarImage src={photo.src} className='object-cover' />
-                <AvatarFallback>CN</AvatarFallback>
-              </Avatar>
-              <div>
-                <div className='flex flex-col bg-slate-200 rounded-lg px-4 py-2'>
-                  <span className='text-sm font-semibold'>Reyhan Putra</span>
-                  <p className='text-sm text-slate-700'>
-                    Wah saya melihatnya kemarin di gedung E
-                  </p>
-                </div>
-                <span className='text-xs text-slate-400'>3 jam lalu</span>
-              </div>
-            </div>
-            <div className='flex items-start gap-2'>
-              <Avatar className='object-cover'>
-                <AvatarImage src={photo.src} className='object-cover' />
-                <AvatarFallback>CN</AvatarFallback>
-              </Avatar>
-              <div>
-                <div className='flex flex-col bg-slate-200 rounded-lg px-4 py-2'>
-                  <span className='text-sm font-semibold'>Reyhan Putra</span>
-                  <p className='text-sm text-slate-700'>
-                    Wah saya melihatnya kemarin di gedung E
-                  </p>
-                </div>
-                <span className='text-xs text-slate-400'>3 jam lalu</span>
-              </div>
-            </div>
-            <div className='flex items-start gap-2'>
-              <Avatar className='object-cover'>
-                <AvatarImage src={photo.src} className='object-cover' />
-                <AvatarFallback>CN</AvatarFallback>
-              </Avatar>
-              <div>
-                <div className='flex flex-col bg-slate-200 rounded-lg px-4 py-2'>
-                  <span className='text-sm font-semibold'>Reyhan Putra</span>
-                  <p className='text-sm text-slate-700'>
-                    Wah saya melihatnya kemarin di gedung E
-                  </p>
-                </div>
-                <span className='text-xs text-slate-400'>3 jam lalu</span>
-              </div>
-            </div>
+            )}
+            <div ref={commentEndRef} />
           </div>
           <DialogFooter className='flex items-center px-4 gap-2 sticky bottom-0 bg-white h-full py-4 shadow-[0px_-20px_21px_-8px_rgba(0,_0,_0,_0.1)]'>
             <Avatar className='object-cover'>
-              <AvatarImage src={session.user.image} className='object-cover' />
-              <AvatarFallback>CN</AvatarFallback>
+              <AvatarImage
+                src={session.user.avatarUrl}
+                className='object-cover'
+              />
+              <AvatarFallback>
+                {getInitials(session.user.fullname)}
+              </AvatarFallback>
             </Avatar>
-            <Input
-              type='text'
-              placeholder='Tulis Komentar ...'
-              autoComplete='off'
-            />
-            <Button type='submit' className='w-9 h-9'>
-              <Send />
-              <span className='sr-only'>Send</span>
-            </Button>
+            <form
+              className='w-full flex items-center gap-2'
+              onSubmit={handleSubmit}>
+              <Input
+                type='text'
+                placeholder='Tulis Komentar ...'
+                autoComplete='off'
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+              />
+              <Button
+                disabled={!text.length || mutation?.isPending}
+                type='submit'
+                className='w-9 h-9'>
+                {mutation.isPending ? (
+                  <Loader2 className='mx-auto animate-spin' />
+                ) : (
+                  <Send />
+                )}
+              </Button>
+            </form>
           </DialogFooter>
         </DialogContent>
       </Dialog>

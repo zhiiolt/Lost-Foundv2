@@ -22,6 +22,15 @@ export const userSchema = z.object({
   profile: ProfileSchema, // Modify based on actual profile structure
 });
 
+export const commentSchema = z.object({
+  id: z.string(),
+  userId: z.string(),
+  laporanId: z.string(),
+  isi: z.string(),
+  createdAt: z.string().datetime(),
+  user: userSchema, // Sesuaikan jika ada perbedaan struktur user di Prisma
+});
+
 export const laporanSchema = z.object({
   id: z.string(),
   userId: z.string(),
@@ -38,7 +47,7 @@ export const laporanSchema = z.object({
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
   user: userSchema,
-  comments: z.array(z.object({})).optional(), // Modify based on actual comment structure
+  comments: z.array(commentSchema).optional(), // Modify based on actual comment structure
   likes: z.array(z.any()).optional(), // Modify based on actual like structure
 });
 

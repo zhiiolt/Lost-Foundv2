@@ -54,9 +54,8 @@ import { IconEdit } from "@tabler/icons-react";
 import { useSession } from "next-auth/react";
 import { useEffect } from "react";
 import { getInitials } from "@/lib/initials";
-import { Suspense } from "react";
 export function Profil() {
-  const { data: session, status } = useSession();
+  const { data: session, status, update } = useSession();
   console.log(session);
 
   const fileInputRef = useRef(null);
@@ -68,7 +67,6 @@ export function Profil() {
     defaultValues: {
       username: session.user.username || "",
       email: session.user.email || "",
-      password: session.user.password || "",
       fullName: session.user.fullname || "",
       gender: session.user.gender || "",
       birthdate: session.user.birthdate || "",
@@ -79,16 +77,69 @@ export function Profil() {
   });
 
   const onSubmit = async (data) => {
+    const formData = new FormData();
     console.log(data);
-    toast("", {
-      position: "top-right",
-      description: (
-        <div className='flex gap-2 items-center'>
-          <IconInfoOctagonFilled className='text-teal-500' />
-          <p className='text-slate-950'>Perubahan profil berhasil disimpan.</p>
-        </div>
-      ),
-    });
+    // Tambahkan semua field ke dalam FormData
+    formData.set("id", session.user.id);
+    formData.set("fullName", data.fullName);
+    formData.set("email", data.email);
+    formData.set("telp", data.phoneNumber);
+    formData.set("address", data.address);
+    formData.set("username", data.username);
+    formData.set("gender", data.gender);
+    formData.set(
+      "birthdate",
+      data.birthdate ? data.birthdate.toLocaleString() : ""
+    );
+
+    // Tambahkan file jika ada
+    if (data.profilePicture) {
+      formData.set("foto", data.profilePicture);
+    } else {
+      formData.set("foto", null);
+    }
+    console.log(data.profilePicture);
+
+    // Kirimkan menggunakan fetch
+    try {
+      const res = await fetch("http://localhost:3000/api/profile", {
+        method: "PUT",
+        body: formData, // Kirim FormData
+      });
+
+      if (res.ok) {
+        const updatedProfile = (await res.json()).data;
+        console.log(updatedProfile);
+        update({
+          fullname: updatedProfile.fullname,
+          email: updatedProfile.email,
+          username: updatedProfile.username,
+          telp: updatedProfile.profile.telp,
+          address: updatedProfile.profile.address,
+          gender: updatedProfile.profile.gender,
+          birthdate: updatedProfile.profile.birthDate,
+          avatarUrl: updatedProfile.profile.avatarUrl,
+          type: session.user.type,
+        });
+        toast("", {
+          position: "top-right",
+          description: (
+            <div className='flex gap-2 items-center'>
+              <IconInfoOctagonFilled className='text-teal-500' />
+              <p className='text-slate-950'>
+                Perubahan profil berhasil disimpan.
+              </p>
+            </div>
+          ),
+        });
+      } else {
+        const error = await res.json();
+        toast.error(error.message || "Gagal mengirim laporan");
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Terjadi kesalahan, silakan coba lagi.");
+    }
   };
 
   return (
@@ -231,7 +282,7 @@ export function Profil() {
                             </FormDescription>
                             <FormControl>
                               <Input
-                                disabled={disable}
+                                disabled={true}
                                 type='email'
                                 placeholder='example@email.com'
                                 {...field}
@@ -328,37 +379,6 @@ export function Profil() {
                                 {...field}
                                 className={
                                   form.formState.errors.username
-                                    ? "border-red-500 ring-red-500 text-red-500 focus-visible:ring-red-300 focus-visible:ring-2 text-sm"
-                                    : "text-sm"
-                                }
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                    <div>
-                      <FormField
-                        control={form.control}
-                        name='password'
-                        render={({ field }) => (
-                          <FormItem className='flex flex-col'>
-                            <FormLabel className="after:content-['*'] after:ml-0.5 after:text-red-500">
-                              Password
-                            </FormLabel>
-                            <FormDescription>
-                              Kata sandi ini akan digunakan untuk melindungi
-                              akun Anda. Harap simpan dengan aman.
-                            </FormDescription>
-                            <FormControl>
-                              <Input
-                                disabled={disable}
-                                type='password'
-                                placeholder='Masukkan password'
-                                {...field}
-                                className={
-                                  form.formState.errors.password
                                     ? "border-red-500 ring-red-500 text-red-500 focus-visible:ring-red-300 focus-visible:ring-2 text-sm"
                                     : "text-sm"
                                 }
@@ -477,6 +497,7 @@ export function Profil() {
               </Button>
               <Button
                 type='submit'
+                onClick={() => console.log(form.formState.errors)}
                 className='w-[120px] disabled:cursor-not-allowed'
                 disabled={form.formState.isSubmitting || disable}>
                 {form.formState.isSubmitting && (

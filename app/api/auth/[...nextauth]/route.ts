@@ -38,6 +38,7 @@ export const authOptions: NextAuthOptions = {
               gender: user.profile?.gender || null,
               birthdate: user.profile?.birthdate || null,
               avatarUrl: user.profile?.avatarUrl || null,
+              type: "credentials",
             };
           }
         }
@@ -50,7 +51,7 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async jwt({ token, account, profile, user }: any) {
+    async jwt({ token, account, profile, user, trigger, session }: any) {
       // Merge data for Credentials login
       if (account?.provider === "credentials" && user) {
         token = {
@@ -63,6 +64,7 @@ export const authOptions: NextAuthOptions = {
           gender: user.gender,
           birthdate: user.birthdate,
           avatarUrl: user.avatarUrl,
+          type: "credentials",
         };
       }
 
@@ -88,8 +90,21 @@ export const authOptions: NextAuthOptions = {
             gender: result.data.profile?.gender || null,
             birthdate: result.data.profile?.birthdate || null,
             avatarUrl: result.data.profile?.avatarUrl || null,
+            type: "google",
           };
         }
+      }
+
+      if (trigger === "update" && session) {
+        token.fullname = session.fullname;
+        token.email = session.email;
+        token.username = session.username;
+        token.telp = session.telp;
+        token.address = session.address;
+        token.gender = session.gender;
+        token.birthdate = session.birthdate;
+        token.avatarUrl = session.avatarUrl;
+        token.type = session.type;
       }
 
       return token;
@@ -109,6 +124,7 @@ export const authOptions: NextAuthOptions = {
           gender: token.gender,
           birthdate: token.birthdate,
           avatarUrl: token.avatarUrl,
+          type: token.type,
         },
       };
     },

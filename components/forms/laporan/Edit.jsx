@@ -76,7 +76,6 @@ export default function EditLaporan({ laporan, setIsOpen }) {
   });
 
   const onSubmit = async (data) => {
-    console.log(data.tanggal);
     const formData = new FormData();
 
     // Tambahkan semua field ke dalam FormData

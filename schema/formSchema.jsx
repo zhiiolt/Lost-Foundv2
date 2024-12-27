@@ -87,39 +87,28 @@ export const ProfilSchema = z.object({
       "Username hanya boleh berisi huruf, angka, dan underscore"
     ),
   email: z.string().email("Email tidak valid"),
-  password: z
-    .string()
-    .min(8, "Password harus memiliki minimal 8 karakter")
-    .regex(
-      /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*?&]+$/,
-      "Password harus mengandung huruf dan angka"
-    ),
   fullName: z.string().min(1, "Nama lengkap tidak boleh kosong"),
-  gender: z.enum(["pria", "wanita"], "Jenis kelamin tidak valid").optional(),
+  gender: z
+    .union([z.enum(["pria", "wanita"]), z.string(), z.null()]) // Bisa enum, string, atau null
+    .optional(), // Opsional
   birthdate: z
-    .date()
-    .refine(
-      (date) => date <= new Date(),
-      "Tanggal lahir tidak boleh di masa depan"
-    )
+    .union([z.date(), z.string(), z.null()]) // Bisa Date, string, atau null
     .optional(),
   address: z.string().optional(),
   birthdate: z
-    .union([z.date(), z.null()]) // Menerima baik Date atau null
+    .union([z.date(), z.null(), z.string()]) // Menerima baik Date atau null
     .refine(
       (date) => !date || date <= new Date(),
       "Tanggal lahir tidak boleh di masa depan"
     )
     .optional(),
-  profilePicture: z
-    .union([
-      // Gabungkan dua tipe: File atau String
-      z.instanceof(File).refine((file) => file.size <= 5 * 1024 * 1024, {
-        message: "File must be smaller than 5MB",
-      }), // Validasi jika input berupa File
-      z.string().optional(), // Validasi jika input berupa URL (string)
-    ])
-    .optional(),
+  profilePicture: z.union([z.instanceof(File), z.string()]).optional(),
+  phoneNumber: z
+    .string()
+    .optional()
+    .refine((val) => !val || (val.length >= 12 && val.length <= 13), {
+      message: "tidak valid",
+    }),
 });
 
 export const RegisterSchema = z
