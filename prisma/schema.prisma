@@ -73,11 +73,12 @@ model Comment {
 }
 
 model Likes {
-  id        Int     @id @default(autoincrement())
   userId    String
   laporanId String
   user      User    @relation(fields: [userId], references: [id])
   laporan   Laporan @relation(fields: [laporanId], references: [id])
+
+  @@unique([userId, laporanId])
 }
 
 model Notification {

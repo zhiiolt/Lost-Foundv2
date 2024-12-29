@@ -80,7 +80,9 @@ export function Laporan() {
     kategori: [],
     waktu: "semua",
   });
-
+  if (status == "success") {
+    console.log(data);
+  }
   const filteredLaporan =
     status === "success"
       ? data.pages

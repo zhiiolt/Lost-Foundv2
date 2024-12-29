@@ -40,6 +40,7 @@ import { useRouter } from "next/navigation";
 import InfiniteScrollContainer from "../../../../components/ui/InfiniteScrollContainer";
 import { getInitials } from "@/lib/initials";
 import { useQueryClient } from "@tanstack/react-query";
+import LikeButton from "./LikeButton";
 
 export function CardLaporan({
   laporan,
@@ -210,55 +211,15 @@ export function CardLaporan({
                         Ciri-Ciri: {item.ciri}
                       </p>
                       <div className='flex gap-2'>
-                        <span
-                          className={`${
-                            isLike(item.likes).status
-                              ? "text-pink-700"
-                              : "text-slate-400"
-                          } flex gap-1 text-sm items-center`}>
-                          <Button
-                            onClick={async () => {
-                              const datum = isLike(item.likes);
-                              if (datum.status) {
-                                const res = await fetch(
-                                  "http://localhost:3000/api/likes",
-                                  {
-                                    method: "POST",
-                                    body: JSON.stringify({
-                                      id: datum.data.id,
-                                      laporanId: item.id,
-                                      userId: session?.user?.id,
-                                      likes: "false",
-                                    }),
-                                  }
-                                );
-                                if (res.ok) {
-                                  router.refresh();
-                                }
-                              } else {
-                                const res = await fetch(
-                                  "http://localhost:3000/api/likes",
-                                  {
-                                    method: "POST",
-                                    body: JSON.stringify({
-                                      laporanId: item.id,
-                                      userId: session?.user?.id,
-                                      likes: "true",
-                                    }),
-                                  }
-                                );
-                                if (res.ok) {
-                                  router.refresh();
-                                }
-                              }
-                            }}
-                            type='button'
-                            variant='ghost'
-                            className='hover:bg-white hover:text-pink-300 px-2'>
-                            <IconHeartFilled className='h-6' />{" "}
-                            {item.likes.length}
-                          </Button>
-                        </span>
+                        <LikeButton
+                          laporanId={item.id}
+                          initialState={{
+                            likes: item.likes.length,
+                            isLiked: item.likes.some(
+                              (like) => like.userId === session.user.id
+                            ),
+                          }}
+                        />
                         <span className='flex text-slate-400 gap-1 text-sm items-center'>
                           <TooltipProvider>
                             <Tooltip>

@@ -8,44 +8,94 @@ import mime from "mime";
 import _ from "lodash";
 import { getServerSession } from "next-auth";
 import { revalidatePath } from "next/cache";
+import { authOptions } from "../auth/[...nextauth]/route";
+import prisma from "@/lib/prisma/db";
+
+export async function GET(request: NextRequest) {
+  const laporanId = request.nextUrl.searchParams.get("id") || "";
+  const session = await getServerSession(authOptions);
+  if (!session) {
+    return NextResponse.json(
+      { status: "error", message: "Unauthorized" },
+      { status: 401 }
+    );
+  }
+  const laporan = await prisma.laporan.findUnique({
+    where: {
+      id: laporanId,
+    },
+    select: {
+      likes: {
+        where: {
+          userId: session.user.id,
+        },
+      },
+      _count: {
+        select: {
+          likes: true,
+        },
+      },
+    },
+  });
+
+  if (!laporan) {
+    return NextResponse.json(
+      { status: "error", message: "Laporan not found" },
+      { status: 404 }
+    );
+  }
+
+  const data = {
+    likes: laporan._count.likes,
+    isLiked: !!laporan.likes.length,
+  };
+
+  return NextResponse.json(data);
+}
 
 export async function POST(request: NextRequest) {
-  const req = await request.json();
-
-  if (req.likes === "true") {
-    const data = {
-      laporanId: req.laporanId,
-      userId: req.userId,
-    };
-    const res = await likes(true, data);
-    if (res.status) {
-      return NextResponse.json(
-        { status: "success", message: res.message, data: res.data },
-        { status: 200 }
-      );
-    } else {
-      return NextResponse.json(
-        { status: "error", message: res.message },
-        { status: 400 }
-      );
-    }
-  } else {
-    const data = {
-      id: req.id,
-      laporanId: req.laporanId,
-      userId: req.userId,
-    };
-    const res = await likes(false, data);
-    if (res.status) {
-      return NextResponse.json(
-        { status: "success", message: res.message, data: res.data },
-        { status: 200 }
-      );
-    } else {
-      return NextResponse.json(
-        { status: "error", message: res.message },
-        { status: 400 }
-      );
-    }
+  const laporanId = request.nextUrl.searchParams.get("id") || "";
+  const session = await getServerSession(authOptions);
+  if (!session) {
+    return NextResponse.json(
+      { status: "error", message: "Unauthorized" },
+      { status: 401 }
+    );
   }
+
+  await prisma.likes.upsert({
+    where: {
+      userId_laporanId: {
+        userId: session.user.id,
+        laporanId: laporanId,
+      },
+    },
+    create: {
+      userId: session.user.id,
+      laporanId: laporanId,
+    },
+    update: {},
+  });
+
+  return NextResponse.json({ status: "success" });
+}
+
+export async function DELETE(request: NextRequest) {
+  const laporanId = request.nextUrl.searchParams.get("id") || "";
+  const session = await getServerSession(authOptions);
+  if (!session) {
+    return NextResponse.json(
+      { status: "error", message: "Unauthorized" },
+      { status: 401 }
+    );
+  }
+
+  await prisma.likes.deleteMany({
+    where: {
+      userId: session.user.id,
+      laporanId: laporanId,
+    },
+  });
+
+  return NextResponse.json({ status: "success" });
 }
