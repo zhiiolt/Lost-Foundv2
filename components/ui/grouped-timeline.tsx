@@ -1,260 +1,181 @@
 /** @format */
+"use client";
 
+import { useInfiniteQuery } from "@tanstack/react-query";
 import Image from "next/image";
 import photo from "../../assets/avatar/olly.jpg";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Loader2 } from "lucide-react";
+import { convertDateString2 } from "@/lib/time";
+import { getInitials } from "@/lib/initials";
+import {
+  IconHeartFilled,
+  IconMessage2,
+  IconMessageFilled,
+  IconZoomExclamation,
+  IconZoomExclamationFilled,
+} from "@tabler/icons-react";
+import { Button } from "@/components/ui/button";
+import { DialogLaporan } from "@/app/(user)/laporan/component/DialogLaporan";
+import { useState } from "react";
 
 export default function Activity() {
+  const {
+    data,
+    status,
+    fetchNextPage,
+    hasNextPage,
+    isFetching,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
+    queryKey: ["notification"],
+    queryFn: async ({ pageParam }) => {
+      const res = await fetch(
+        `http://localhost:3000/api/notifications${
+          pageParam ? `?cursor=${pageParam}` : ""
+        }`
+      );
+      if (!res.ok) {
+        throw new Error("Failed to fetch notifications");
+      }
+      return res.json();
+    },
+    initialPageParam: null,
+    getNextPageParam: (lastPage) => lastPage.nextCursor,
+  });
+
+  const notifications =
+    status === "success" ? data.pages.flatMap((page) => page.notification) : [];
+
+  const groupedNotifications = notifications.reduce((acc, notification) => {
+    // Ambil tanggal hari ini dan kemarin
+    const now = new Date();
+
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
+
+    // Ubah string tanggal
+    const dateString = convertDateString2(
+      notification.createdAt.toLocaleString()
+    );
+    const date = new Date(dateString);
+    const dateOnly = new Date(
+      date.getFullYear(),
+      date.getMonth(),
+      date.getDate()
+    );
+
+    // Tentukan label
+    let dateLabel;
+    if (dateOnly.getTime() === today.getTime()) {
+      dateLabel = "Hari ini";
+    } else if (dateOnly.getTime() === yesterday.getTime()) {
+      dateLabel = "Kemarin";
+    } else {
+      dateLabel = dateOnly.toLocaleDateString(); // Format tanggal biasa
+    }
+
+    // Tambahkan ke grup
+    if (!acc[dateLabel]) {
+      acc[dateLabel] = [];
+    }
+    acc[dateLabel].push(notification);
+
+    return acc;
+  }, {});
+
+  console.log(groupedNotifications);
+
+  if (status === "pending") {
+    return (
+      <div className='flex items-center justify-center min-h-[100px] text-sm my-auto  text-center text-muted-foreground mx-auto'>
+        <Loader2 className='mx-auto animate-spin' />;
+      </div>
+    );
+  }
+
+  if (status === "error") {
+    return (
+      <div className='text-center text-red-500'>
+        Terjadi kesalahan saat memuat notifikasi.
+      </div>
+    );
+  }
+
+  if (status === "success" && notifications.length === 0 && !hasNextPage) {
+    return (
+      <div className='flex items-center justify-center min-h-[100px] text-sm my-auto  text-center text-muted-foreground mx-auto'>
+        Tidak ada notifikasi
+      </div>
+    );
+  }
+
   return (
-    <>
-      <div className='h-[320px] overflow-y-scroll p-2 mt-2'>
-        <div className='p-5 mb-4 border border-gray-100 rounded-lg bg-slate-100 dark:bg-gray-800 dark:border-gray-700 max-h-[400px]'>
-          <time className='text-xs font-semibold text-gray-900 dark:text-white'>
-            January 13th, 2022
+    <div className='min-h-[100px] max-h-[400px] overflow-y-scroll p-2 mt-2'>
+      {Object.keys(groupedNotifications).map((date) => (
+        <div
+          key={date}
+          className='p-5 mb-4 border border-gray-300 rounded-lg bg-white dark:bg-gray-800 dark:border-gray-700'>
+          <time className='text-xs font-bold text-teal-900 dark:text-white'>
+            {date}
           </time>
           <ol className='mt-2 divide-y divider-gray-200 dark:divide-gray-700'>
-            <li>
-              <a
-                href='#'
-                className='items-center block p-3 sm:flex hover:bg-gray-100 dark:hover:bg-gray-700'>
-                <Avatar className='me-3 object-cover'>
-                  <AvatarImage src={photo.src} className='object-cover' />
-                  <AvatarFallback>CN</AvatarFallback>
-                </Avatar>
-                <div className='text-gray-600 dark:text-gray-400'>
-                  <div className='text-xs font-normal'>
-                    <span className='font-medium text-gray-900 dark:text-white'>
-                      Jese Leos
-                    </span>{" "}
-                    likes{" "}
-                    <span className='font-medium text-gray-900 dark:text-white'>
-                      Bonnie Green's
-                    </span>{" "}
-                    post in{" "}
-                    <span className='font-medium text-gray-900 dark:text-white'>
-                      {" "}
-                      How to start with Flowbite library
+            {groupedNotifications[date].map((notification: any, idx: any) => (
+              <li key={idx}>
+                <div className='block px-3 py-4 sm:flex hover:bg-slate-100 rounded-xl hover:cursor-pointer dark:hover:bg-gray-700'>
+                  <Avatar className='me-3 object-cover'>
+                    <AvatarImage
+                      src={notification.sender.profile.avatarUrl}
+                      className='object-cover'
+                    />
+                    <AvatarFallback>
+                      {getInitials(notification.sender.fullname)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className='text-gray-600 dark:text-gray-400'>
+                    <div className='text-xs font-normal'>
+                      <span className='font-medium text-gray-900 dark:text-white'>
+                        {notification.sender.fullname}
+                      </span>{" "}
+                      {notification.notifType === "comment"
+                        ? "mengomentari laporan anda:"
+                        : notification.notifType == "like"
+                        ? "menyukai laporan Anda"
+                        : notification.message}{" "}
+                    </div>
+                    {notification.notifType === "comment" && (
+                      <div className='text-xs font-normal'>
+                        "{notification.message}"
+                      </div>
+                    )}
+                    <span className='inline-flex items-center text-xs font-normal text-gray-500 dark:text-gray-400 gap-2'>
+                      {notification.notifType === "comment" && (
+                        <IconMessageFilled size={12} />
+                      )}
+                      {notification.notifType === "like" && (
+                        <IconHeartFilled size={12} />
+                      )}
+                      {notification.notifType === "match" && (
+                        <IconZoomExclamationFilled size={12} />
+                      )}
+                      {notification.notifType}
                     </span>
                   </div>
-                  <div className='text-xs font-normal'>
-                    "I wanted to share a webinar zeroheight."
-                  </div>
-                  <span className='inline-flex items-center text-xs font-normal text-gray-500 dark:text-gray-400'>
-                    <svg
-                      className='w-2.5 h-2.5 me-1'
-                      aria-hidden='true'
-                      xmlns='http://www.w3.org/2000/svg'
-                      fill='currentColor'
-                      viewBox='0 0 20 20'>
-                      <path d='M10 .5a9.5 9.5 0 1 0 0 19 9.5 9.5 0 0 0 0-19ZM8.374 17.4a7.6 7.6 0 0 1-5.9-7.4c0-.83.137-1.655.406-2.441l.239.019a3.887 3.887 0 0 1 2.082 2.5 4.1 4.1 0 0 0 2.441 2.8c1.148.522 1.389 2.007.732 4.522Zm3.6-8.829a.997.997 0 0 0-.027-.225 5.456 5.456 0 0 0-2.811-3.662c-.832-.527-1.347-.854-1.486-1.89a7.584 7.584 0 0 1 8.364 2.47c-1.387.208-2.14 2.237-2.14 3.307a1.187 1.187 0 0 1-1.9 0Zm1.626 8.053-.671-2.013a1.9 1.9 0 0 1 1.771-1.757l2.032.619a7.553 7.553 0 0 1-3.132 3.151Z' />
-                    </svg>
-                    Public
-                  </span>
                 </div>
-              </a>
-            </li>
-            <li>
-              <a
-                href='#'
-                className='items-center block p-3 sm:flex hover:bg-gray-100 dark:hover:bg-gray-700'>
-                <Avatar className='me-3 object-cover'>
-                  <AvatarImage src={photo.src} className='object-cover' />
-                  <AvatarFallback>CN</AvatarFallback>
-                </Avatar>
-                <div>
-                  <div className='text-xs font-normal text-gray-600 dark:text-gray-400'>
-                    <span className='font-medium text-gray-900 dark:text-white'>
-                      Bonnie Green
-                    </span>{" "}
-                    react to{" "}
-                    <span className='font-medium text-gray-900 dark:text-white'>
-                      Thomas Lean's
-                    </span>{" "}
-                    comment
-                  </div>
-                  <span className='inline-flex items-center text-xs font-normal text-gray-500 dark:text-gray-400'>
-                    <svg
-                      className='w-2.5 h-2.5 me-1'
-                      aria-hidden='true'
-                      xmlns='http://www.w3.org/2000/svg'
-                      fill='currentColor'
-                      viewBox='0 0 20 20'>
-                      <path d='m2 13.587 3.055-3.055A4.913 4.913 0 0 1 5 10a5.006 5.006 0 0 1 5-5c.178.008.356.026.532.054l1.744-1.744A8.973 8.973 0 0 0 10 3C4.612 3 0 8.336 0 10a6.49 6.49 0 0 0 2 3.587Z' />
-                      <path d='m12.7 8.714 6.007-6.007a1 1 0 1 0-1.414-1.414L11.286 7.3a2.98 2.98 0 0 0-.588-.21l-.035-.01a2.981 2.981 0 0 0-3.584 3.583c0 .012.008.022.01.033.05.204.12.401.211.59l-6.007 6.007a1 1 0 1 0 1.414 1.414L8.714 12.7c.189.091.386.162.59.211.011 0 .021.007.033.01a2.981 2.981 0 0 0 3.584-3.584c0-.012-.008-.023-.011-.035a3.05 3.05 0 0 0-.21-.588Z' />
-                      <path d='M17.821 6.593 14.964 9.45a4.952 4.952 0 0 1-5.514 5.514L7.665 16.75c.767.165 1.55.25 2.335.251 6.453 0 10-5.258 10-7 0-1.166-1.637-2.874-2.179-3.407Z' />
-                    </svg>
-                    Private
-                  </span>
-                </div>
-              </a>
-            </li>
+              </li>
+            ))}
           </ol>
         </div>
-        <div className='p-5 border border-gray-100 rounded-lg bg-slate-100 dark:bg-gray-800 dark:border-gray-700'>
-          <time className='text-xs font-semibold text-gray-900 dark:text-white'>
-            January 12th, 2022
-          </time>
-          <ol className='mt-3 divide-y divider-gray-200 dark:divide-gray-700'>
-            <li>
-              <a
-                href='#'
-                className='items-center block p-3 sm:flex hover:bg-gray-100 dark:hover:bg-gray-700'>
-                <Avatar className='me-3 object-cover'>
-                  <AvatarImage src={photo.src} className='object-cover' />
-                  <AvatarFallback>CN</AvatarFallback>
-                </Avatar>
-                <div className='text-gray-600 dark:text-gray-400'>
-                  <div className='text-xs font-normal'>
-                    <span className='font-medium text-gray-900 dark:text-white'>
-                      Laura Romeros
-                    </span>{" "}
-                    likes{" "}
-                    <span className='font-medium text-gray-900 dark:text-white'>
-                      Bonnie Green's
-                    </span>{" "}
-                    post in{" "}
-                    <span className='font-medium text-gray-900 dark:text-white'>
-                      {" "}
-                      How to start with Flowbite library
-                    </span>
-                  </div>
-                  <div className='text-xs font-normal'>
-                    "I wanted to share a webinar zeroheight."
-                  </div>
-                  <span className='inline-flex items-center text-xs font-normal text-gray-500 dark:text-gray-400'>
-                    <svg
-                      className='w-2.5 h-2.5 me-1'
-                      aria-hidden='true'
-                      xmlns='http://www.w3.org/2000/svg'
-                      fill='currentColor'
-                      viewBox='0 0 20 20'>
-                      <path d='m2 13.587 3.055-3.055A4.913 4.913 0 0 1 5 10a5.006 5.006 0 0 1 5-5c.178.008.356.026.532.054l1.744-1.744A8.973 8.973 0 0 0 10 3C4.612 3 0 8.336 0 10a6.49 6.49 0 0 0 2 3.587Z' />
-                      <path d='m12.7 8.714 6.007-6.007a1 1 0 1 0-1.414-1.414L11.286 7.3a2.98 2.98 0 0 0-.588-.21l-.035-.01a2.981 2.981 0 0 0-3.584 3.583c0 .012.008.022.01.033.05.204.12.401.211.59l-6.007 6.007a1 1 0 1 0 1.414 1.414L8.714 12.7c.189.091.386.162.59.211.011 0 .021.007.033.01a2.981 2.981 0 0 0 3.584-3.584c0-.012-.008-.023-.011-.035a3.05 3.05 0 0 0-.21-.588Z' />
-                      <path d='M17.821 6.593 14.964 9.45a4.952 4.952 0 0 1-5.514 5.514L7.665 16.75c.767.165 1.55.25 2.335.251 6.453 0 10-5.258 10-7 0-1.166-1.637-2.874-2.179-3.407Z' />
-                    </svg>
-                    Private
-                  </span>
-                </div>
-              </a>
-            </li>
-            <li>
-              <a
-                href='#'
-                className='items-center block p-3 sm:flex hover:bg-gray-100 dark:hover:bg-gray-700'>
-                <Avatar className='me-3 object-cover'>
-                  <AvatarImage src={photo.src} className='object-cover' />
-                  <AvatarFallback>CN</AvatarFallback>
-                </Avatar>
-                <div>
-                  <div className='text-xs font-normal text-gray-600 dark:text-gray-400'>
-                    <span className='font-medium text-gray-900 dark:text-white'>
-                      Mike Willi
-                    </span>{" "}
-                    react to{" "}
-                    <span className='font-medium text-gray-900 dark:text-white'>
-                      Thomas Lean's
-                    </span>{" "}
-                    comment
-                  </div>
-                  <span className='inline-flex items-center text-xs font-normal text-gray-500 dark:text-gray-400'>
-                    <svg
-                      className='w-2.5 h-2.5 me-1'
-                      aria-hidden='true'
-                      xmlns='http://www.w3.org/2000/svg'
-                      fill='currentColor'
-                      viewBox='0 0 20 20'>
-                      <path d='M10 .5a9.5 9.5 0 1 0 0 19 9.5 9.5 0 0 0 0-19ZM8.374 17.4a7.6 7.6 0 0 1-5.9-7.4c0-.83.137-1.655.406-2.441l.239.019a3.887 3.887 0 0 1 2.082 2.5 4.1 4.1 0 0 0 2.441 2.8c1.148.522 1.389 2.007.732 4.522Zm3.6-8.829a.997.997 0 0 0-.027-.225 5.456 5.456 0 0 0-2.811-3.662c-.832-.527-1.347-.854-1.486-1.89a7.584 7.584 0 0 1 8.364 2.47c-1.387.208-2.14 2.237-2.14 3.307a1.187 1.187 0 0 1-1.9 0Zm1.626 8.053-.671-2.013a1.9 1.9 0 0 1 1.771-1.757l2.032.619a7.553 7.553 0 0 1-3.132 3.151Z' />
-                    </svg>
-                    Public
-                  </span>
-                </div>
-              </a>
-            </li>
-            <li>
-              <a
-                href='#'
-                className='items-center block p-3 sm:flex hover:bg-gray-100 dark:hover:bg-gray-700'>
-                <Avatar className='me-3 object-cover'>
-                  <AvatarImage src={photo.src} className='object-cover' />
-                  <AvatarFallback>CN</AvatarFallback>
-                </Avatar>
-                <div className='text-gray-600 dark:text-gray-400'>
-                  <div className='text-xs font-normal'>
-                    <span className='font-medium text-gray-900 dark:text-white'>
-                      Jese Leos
-                    </span>{" "}
-                    likes{" "}
-                    <span className='font-medium text-gray-900 dark:text-white'>
-                      Bonnie Green's
-                    </span>{" "}
-                    post in{" "}
-                    <span className='font-medium text-gray-900 dark:text-white'>
-                      {" "}
-                      How to start with Flowbite library
-                    </span>
-                  </div>
-                  <div className='text-xs font-normal'>
-                    "I wanted to share a webinar zeroheight."
-                  </div>
-                  <span className='inline-flex items-center text-xs font-normal text-gray-500 dark:text-gray-400'>
-                    <svg
-                      className='w-2.5 h-2.5 me-1'
-                      aria-hidden='true'
-                      xmlns='http://www.w3.org/2000/svg'
-                      fill='currentColor'
-                      viewBox='0 0 20 20'>
-                      <path d='M10 .5a9.5 9.5 0 1 0 0 19 9.5 9.5 0 0 0 0-19ZM8.374 17.4a7.6 7.6 0 0 1-5.9-7.4c0-.83.137-1.655.406-2.441l.239.019a3.887 3.887 0 0 1 2.082 2.5 4.1 4.1 0 0 0 2.441 2.8c1.148.522 1.389 2.007.732 4.522Zm3.6-8.829a.997.997 0 0 0-.027-.225 5.456 5.456 0 0 0-2.811-3.662c-.832-.527-1.347-.854-1.486-1.89a7.584 7.584 0 0 1 8.364 2.47c-1.387.208-2.14 2.237-2.14 3.307a1.187 1.187 0 0 1-1.9 0Zm1.626 8.053-.671-2.013a1.9 1.9 0 0 1 1.771-1.757l2.032.619a7.553 7.553 0 0 1-3.132 3.151Z' />
-                    </svg>
-                    Public
-                  </span>
-                </div>
-              </a>
-            </li>
-            <li>
-              <a
-                href='#'
-                className='items-center block p-3 sm:flex hover:bg-gray-100 dark:hover:bg-gray-700'>
-                <Avatar className='me-3 object-cover'>
-                  <AvatarImage src={photo.src} className='object-cover' />
-                  <AvatarFallback>CN</AvatarFallback>
-                </Avatar>
-                <div className='text-gray-600 dark:text-gray-400'>
-                  <div className='text-xs font-normal'>
-                    <span className='font-medium text-gray-900 dark:text-white'>
-                      Bonnie Green
-                    </span>{" "}
-                    likes{" "}
-                    <span className='font-medium text-gray-900 dark:text-white'>
-                      Bonnie Green's
-                    </span>{" "}
-                    post in{" "}
-                    <span className='font-medium text-gray-900 dark:text-white'>
-                      {" "}
-                      Top figma designs
-                    </span>
-                  </div>
-                  <div className='text-xs font-normal'>
-                    "I wanted to share a webinar zeroheight."
-                  </div>
-                  <span className='inline-flex items-center text-xs font-normal text-gray-500 dark:text-gray-400'>
-                    <svg
-                      className='w-2.5 h-2.5 me-1'
-                      aria-hidden='true'
-                      xmlns='http://www.w3.org/2000/svg'
-                      fill='currentColor'
-                      viewBox='0 0 20 20'>
-                      <path d='m2 13.587 3.055-3.055A4.913 4.913 0 0 1 5 10a5.006 5.006 0 0 1 5-5c.178.008.356.026.532.054l1.744-1.744A8.973 8.973 0 0 0 10 3C4.612 3 0 8.336 0 10a6.49 6.49 0 0 0 2 3.587Z' />
-                      <path d='m12.7 8.714 6.007-6.007a1 1 0 1 0-1.414-1.414L11.286 7.3a2.98 2.98 0 0 0-.588-.21l-.035-.01a2.981 2.981 0 0 0-3.584 3.583c0 .012.008.022.01.033.05.204.12.401.211.59l-6.007 6.007a1 1 0 1 0 1.414 1.414L8.714 12.7c.189.091.386.162.59.211.011 0 .021.007.033.01a2.981 2.981 0 0 0 3.584-3.584c0-.012-.008-.023-.011-.035a3.05 3.05 0 0 0-.21-.588Z' />
-                      <path d='M17.821 6.593 14.964 9.45a4.952 4.952 0 0 1-5.514 5.514L7.665 16.75c.767.165 1.55.25 2.335.251 6.453 0 10-5.258 10-7 0-1.166-1.637-2.874-2.179-3.407Z' />
-                    </svg>
-                    Private
-                  </span>
-                </div>
-              </a>
-            </li>
-          </ol>
-        </div>
-      </div>
-    </>
+      ))}
+      {hasNextPage && (
+        <Button
+          onClick={() => fetchNextPage()}
+          disabled={isFetchingNextPage}
+          className='w-full py-2 mt-2 text-sm '>
+          {isFetchingNextPage ? "Loading..." : "Load More"}
+        </Button>
+      )}
+    </div>
   );
 }

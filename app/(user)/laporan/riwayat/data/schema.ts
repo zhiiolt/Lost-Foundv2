@@ -8,7 +8,7 @@ export const ProfileSchema = z.object({
   address: z.string().nullable(),
   gender: z.enum(["pria", "wanita"]).nullable(), // Adjust enums based on your actual Gender model
   birthDate: z.string().datetime().nullable(),
-  avatarUrl: z.string().url().nullable(),
+  avatarUrl: z.string().nullable(),
 });
 
 export const userSchema = z.object({

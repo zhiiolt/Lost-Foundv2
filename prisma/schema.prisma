@@ -43,23 +43,24 @@ model Profile {
 }
 
 model Laporan {
-  id         String    @id @default(cuid())
-  userId     String
-  jenis      Jenis
-  fotoUrl    String
-  judul      String
-  deskripsi  String    @db.Text
-  namaBarang String
-  kategori   Kategori
-  status     Status    @default(hilang)
-  tanggal    DateTime  @db.Date
-  ciri       String
-  lokasi     String
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
-  user       User      @relation(fields: [userId], references: [id])
-  comments   Comment[]
-  likes      Likes[]
+  id            String         @id @default(cuid())
+  userId        String
+  jenis         Jenis
+  fotoUrl       String
+  judul         String
+  deskripsi     String         @db.Text
+  namaBarang    String
+  kategori      Kategori
+  status        Status         @default(hilang)
+  tanggal       DateTime       @db.Date
+  ciri          String
+  lokasi        String
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  user          User           @relation(fields: [userId], references: [id])
+  comments      Comment[]
+  likes         Likes[]
+  notifications Notification[]
 }
 
 model Comment {
@@ -83,14 +84,16 @@ model Likes {
 
 model Notification {
   id         String           @id @default(cuid())
-  senderId   String           @unique
-  receiverId String           @unique
+  senderId   String
+  receiverId String
+  laporanId  String?
   message    String
   notifType  NotificationType
   isRead     Boolean          @default(false)
   createdAt  DateTime         @default(now())
   sender     User?            @relation(name: "sender", fields: [senderId], references: [id])
   receiver   User             @relation(name: "receiver", fields: [receiverId], references: [id])
+  laporan    Laporan?         @relation(fields: [laporanId], references: [id])
 }
 
 model LogActivity {

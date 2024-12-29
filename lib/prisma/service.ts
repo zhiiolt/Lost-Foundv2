@@ -316,47 +316,6 @@ export async function deleteLaporan(id: string) {
   }
 }
 
-export async function likes(toLike: boolean, data: any) {
-  if (toLike) {
-    const res = await prisma.likes.create({
-      data: {
-        laporanId: data.laporanId,
-        userId: data.userId,
-      },
-    });
-    if (res) {
-      return {
-        status: true,
-        message: "Liked",
-        data: res,
-      };
-    } else {
-      return {
-        status: false,
-        message: "Failed to like",
-      };
-    }
-  } else {
-    const res = await prisma.likes.delete({
-      where: {
-        id: data.id,
-      },
-    });
-    if (res) {
-      return {
-        status: true,
-        message: "Unliked",
-        data: res,
-      };
-    } else {
-      return {
-        status: false,
-        message: "Failed to unlike",
-      };
-    }
-  }
-}
-
 export async function getComment(
   cursor: any,
   pagesize: number,

@@ -15,6 +15,10 @@ import mime from "mime";
 import _ from "lodash";
 import { getServerSession } from "next-auth";
 import { revalidatePath } from "next/cache";
+import prisma from "@/lib/prisma/db";
+import { authOptions } from "../auth/[...nextauth]/route";
+import { Kategori } from "@prisma/client";
+import { kategori } from "@/schema/enum";
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -56,7 +60,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const session = await getServerSession();
+  const session = await getServerSession(authOptions);
   const email = session?.user?.email || "";
   const user = await loginUser({ email });
   const req = await request.formData();
@@ -107,6 +111,29 @@ export async function POST(request: NextRequest) {
     };
     const result = await createLaporan(newLaporan);
     if (result.status) {
+      const matchType =
+        newLaporan.jenis === "kehilangan" ? "penemuan" : "kehilangan";
+      const match = await prisma.laporan.findFirst({
+        where: {
+          jenis: matchType,
+          OR: [
+            { kategori: result.data?.kategori },
+            { namaBarang: { contains: result.data?.namaBarang } },
+            { lokasi: { contains: result.data?.lokasi } },
+          ],
+        },
+      });
+      if (match) {
+        await prisma.notification.create({
+          data: {
+            senderId: session?.user.id || "",
+            receiverId: match.userId,
+            notifType: "match",
+            message: `${session?.user.fullname} membuat laporan yang mungkin cocok dengan ${match.jenis} Anda.`,
+            laporanId: result.data?.id,
+          },
+        });
+      }
       return NextResponse.json(
         { status: "success", data: result.data },
         { status: 200 }
@@ -225,6 +252,12 @@ export async function PUT(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const id = searchParams.get("id");
+  await prisma.notification.deleteMany({
+    where: {
+      laporanId: id,
+      notifType: "match",
+    },
+  });
   const res = await deleteLaporan(id || "");
   if (res.status) {
     return NextResponse.json(

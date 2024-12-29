@@ -1,6 +1,5 @@
 /** @format */
 
-import { likes } from "@/lib/prisma/service";
 import { NextRequest, NextResponse } from "next/server";
 import { join } from "path";
 import { stat, mkdir, writeFile } from "fs/promises";
@@ -63,19 +62,50 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  await prisma.likes.upsert({
+  const laporan = await prisma.laporan.findUnique({
     where: {
-      userId_laporanId: {
+      id: laporanId,
+    },
+    select: {
+      userId: true,
+    },
+  });
+
+  if (!laporan) {
+    return NextResponse.json(
+      { status: "error", message: "Laporan not found" },
+      { status: 404 }
+    );
+  }
+
+  await prisma.$transaction([
+    prisma.likes.upsert({
+      where: {
+        userId_laporanId: {
+          userId: session.user.id,
+          laporanId: laporanId,
+        },
+      },
+      create: {
         userId: session.user.id,
         laporanId: laporanId,
       },
-    },
-    create: {
-      userId: session.user.id,
-      laporanId: laporanId,
-    },
-    update: {},
-  });
+      update: {},
+    }),
+    ...(session.user.id !== laporan.userId
+      ? [
+          prisma.notification.create({
+            data: {
+              senderId: session.user.id,
+              receiverId: laporan.userId,
+              laporanId: laporanId,
+              notifType: "like",
+              message: `${session.user.fullname} menyukai laporan Anda.`,
+            },
+          }),
+        ]
+      : []),
+  ]);
 
   return NextResponse.json({ status: "success" });
 }
@@ -90,12 +120,38 @@ export async function DELETE(request: NextRequest) {
     );
   }
 
-  await prisma.likes.deleteMany({
+  const laporan = await prisma.laporan.findUnique({
     where: {
-      userId: session.user.id,
-      laporanId: laporanId,
+      id: laporanId,
+    },
+    select: {
+      userId: true,
     },
   });
+
+  if (!laporan) {
+    return NextResponse.json(
+      { status: "error", message: "Laporan not found" },
+      { status: 404 }
+    );
+  }
+
+  await prisma.$transaction([
+    prisma.likes.deleteMany({
+      where: {
+        userId: session.user.id,
+        laporanId: laporanId,
+      },
+    }),
+    prisma.notification.deleteMany({
+      where: {
+        senderId: session.user.id,
+        receiverId: laporan.userId,
+        laporanId,
+        notifType: "like",
+      },
+    }),
+  ]);
 
   return NextResponse.json({ status: "success" });
 }
