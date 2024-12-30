@@ -43,6 +43,8 @@ export default function Activity() {
     initialPageParam: null,
     getNextPageParam: (lastPage) => lastPage.nextCursor,
   });
+  const [open, setOpen] = useState(false);
+  const [laporan, setLaporan] = useState(null);
 
   const notifications =
     status === "success" ? data.pages.flatMap((page) => page.notification) : [];
@@ -123,7 +125,12 @@ export default function Activity() {
           <ol className='mt-2 divide-y divider-gray-200 dark:divide-gray-700'>
             {groupedNotifications[date].map((notification: any, idx: any) => (
               <li key={idx}>
-                <div className='block px-3 py-4 sm:flex hover:bg-slate-100 rounded-xl hover:cursor-pointer dark:hover:bg-gray-700'>
+                <a
+                  onClick={() => {
+                    setLaporan(notification.laporan);
+                    setOpen(true);
+                  }}
+                  className='block px-3 py-4 sm:flex hover:bg-slate-100 rounded-xl hover:cursor-pointer dark:hover:bg-gray-700'>
                   <Avatar className='me-3 object-cover'>
                     <AvatarImage
                       src={notification.sender.profile.avatarUrl}
@@ -162,7 +169,7 @@ export default function Activity() {
                       {notification.notifType}
                     </span>
                   </div>
-                </div>
+                </a>
               </li>
             ))}
           </ol>
@@ -175,6 +182,9 @@ export default function Activity() {
           className='w-full py-2 mt-2 text-sm '>
           {isFetchingNextPage ? "Loading..." : "Load More"}
         </Button>
+      )}
+      {status === "success" && laporan && (
+        <DialogLaporan laporan={laporan} open={open} setIsOpen={setOpen} />
       )}
     </div>
   );

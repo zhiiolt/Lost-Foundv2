@@ -41,6 +41,7 @@ import { useSession } from "next-auth/react";
 import { useSubmitCommentMutation } from "@/lib/mutation/mutation";
 
 export function DialogLaporan({ laporan, open, setIsOpen }) {
+  console.log(laporan);
   const status = statuses.find((s) => s.value === laporan.status);
   const formattedDate = formatDate(laporan.tanggal);
   const { data: session } = useSession();

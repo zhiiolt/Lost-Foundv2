@@ -34,6 +34,16 @@ export async function GET(request: NextRequest) {
               profile: true,
             },
           },
+          comments: {
+            include: {
+              user: {
+                include: {
+                  profile: true,
+                },
+              },
+            },
+          },
+          likes: true,
         },
       },
     },
