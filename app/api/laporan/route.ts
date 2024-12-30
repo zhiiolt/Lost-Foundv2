@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
     }
   } else {
     const cursor = request.nextUrl.searchParams.get("cursor") || undefined;
-    const pageSize = 1;
+    const pageSize = 5;
     const res = await getAllLaporan(cursor, pageSize);
 
     if (res && res.laporan.length > 0) {

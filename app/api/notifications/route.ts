@@ -9,7 +9,7 @@ import prisma from "@/lib/prisma/db";
 export async function GET(request: NextRequest) {
   const session = await getServerSession(authOptions);
   const cursor = request.nextUrl.searchParams.get("cursor");
-  const pageSize = 3;
+  const pageSize = 5;
   if (!session) {
     return NextResponse.json(
       { status: "error", message: "Unauthorized" },

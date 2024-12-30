@@ -1,7 +1,11 @@
 /** @format */
 "use client";
 
-import { useInfiniteQuery } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
 import Image from "next/image";
 import photo from "../../assets/avatar/olly.jpg";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -17,7 +21,7 @@ import {
 } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
 import { DialogLaporan } from "@/app/(user)/laporan/component/DialogLaporan";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function Activity() {
   const {
@@ -43,6 +47,27 @@ export default function Activity() {
     initialPageParam: null,
     getNextPageParam: (lastPage) => lastPage.nextCursor,
   });
+
+  const queryClient = useQueryClient();
+  const { mutate } = useMutation({
+    mutationFn: async () => {
+      await fetch("http://localhost:3000/api/notifications/mark-as-read", {
+        method: "PATCH",
+      });
+    },
+    onSuccess: () => {
+      queryClient.setQueryData(["unread-notification-count"], {
+        unreadCount: 0,
+      });
+    },
+    onError(error) {
+      console.error(error);
+    },
+  });
+
+  useEffect(() => {
+    mutate();
+  }, [mutate]);
   const [open, setOpen] = useState(false);
   const [laporan, setLaporan] = useState(null);
 

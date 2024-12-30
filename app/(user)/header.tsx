@@ -23,12 +23,27 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { IconBellFilled, IconCircleFilled } from "@tabler/icons-react";
+import { authOptions } from "../api/auth/[...nextauth]/route";
+import { getServerSession } from "next-auth";
+import prisma from "@/lib/prisma/db";
+import NotificationButton from "./NotificationButton";
 
-export default function Header({
+export default async function Header({
   breadcrumbs,
 }: {
   breadcrumbs: { title: string; url?: string }[];
 }) {
+  const session = await getServerSession(authOptions);
+  if (!session) {
+    return null;
+  }
+  const unreadNotificationCount = await prisma.notification.count({
+    where: {
+      receiverId: session.user.id,
+      isRead: false,
+    },
+  });
+
   return (
     <header className='flex h-16 shrink-0 border-b items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12'>
       <div className='flex items-center justify-between w-full'>
@@ -64,17 +79,9 @@ export default function Header({
         <div className='px-8'>
           <Popover>
             <PopoverTrigger>
-              <div className='relative'>
-                <IconBellFilled
-                  size={38}
-                  className=' text-slate-500 hover:text-slate-700 hover:bg-slate-200 p-2 rounded-full'
-                />
-
-                <IconCircleFilled
-                  className='absolute top-2 right-2 text-red-500'
-                  size={10}
-                />
-              </div>
+              <NotificationButton
+                initialState={{ unreadCount: unreadNotificationCount }}
+              />
             </PopoverTrigger>
             <PopoverContent className='w-[600px]'>
               <span className='text-sm font-bold'>Notifikasi</span>
