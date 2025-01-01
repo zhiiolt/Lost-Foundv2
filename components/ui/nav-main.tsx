@@ -1,8 +1,6 @@
 /** @format */
 
-"use client";
-
-import { ChevronRight, type LucideIcon } from "lucide-react";
+import { ChevronRight, Circle, type LucideIcon } from "lucide-react";
 // import { usePathname } from "next/navigation";
 import Link from "next/link";
 import {
@@ -20,10 +18,12 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
+import ChatButton from "./ChatMenuButton";
 
 export function NavMain({
   items,
   path,
+  unreadCount,
 }: {
   items: {
     title: string;
@@ -36,6 +36,7 @@ export function NavMain({
     }[];
   }[];
   path: string;
+  unreadCount: any;
 }) {
   return (
     <SidebarGroup>
@@ -75,14 +76,22 @@ export function NavMain({
             </Collapsible>
           ) : (
             <SidebarMenuItem key={item.title}>
-              <SidebarMenuButton
-                asChild
-                className={path == item.url ? "bg-teal-950" : ""}>
-                <Link href={item.url}>
-                  {item.icon && <item.icon />}
-                  <span>{item.title}</span>
-                </Link>
-              </SidebarMenuButton>
+              {item.title === "Chat" ? (
+                <ChatButton
+                  initialState={{ unreadCount: unreadCount }}
+                  item={item}
+                  path={path}
+                />
+              ) : (
+                <SidebarMenuButton
+                  asChild
+                  className={path == item.url ? "bg-teal-950" : ""}>
+                  <Link href={item.url}>
+                    {item.icon && <item.icon />}
+                    <span>{item.title}</span>
+                  </Link>
+                </SidebarMenuButton>
+              )}
             </SidebarMenuItem>
           )
         )}

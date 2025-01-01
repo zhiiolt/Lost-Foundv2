@@ -127,7 +127,10 @@ const data = {
   ],
 };
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+export function AppSidebar({
+  unreadCount,
+  ...props
+}: React.ComponentProps<typeof Sidebar> & { unreadCount: any }) {
   const path = usePathname();
   return (
     <Sidebar collapsible='icon' {...props}>
@@ -135,8 +138,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <TeamSwitcher teams={data.teams} />
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} path={path} />
-        <NavProjects suggestions={data.suggestions} path={path} />
+        <NavMain items={data.navMain} path={path} unreadCount={unreadCount} />
       </SidebarContent>
       <SidebarFooter className='py-4'>
         <NavUser />

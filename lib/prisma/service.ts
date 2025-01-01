@@ -3,6 +3,7 @@
 import prisma from "./db";
 import bycrpt from "bcrypt";
 import { convertDateString } from "../time";
+import streamServerClient from "../stream";
 
 export async function registerUser(data: {
   name: string;
@@ -34,18 +35,26 @@ export async function registerUser(data: {
   } else {
     data.password = await bycrpt.hash(data.password, 10);
     try {
-      const newUser = await prisma.user.create({
-        data: {
-          fullname: data.name,
-          email: data.email,
-          username: data.username,
-          password: data.password,
-          profile: {
-            create: {},
+      const user = await prisma.$transaction(async (tx) => {
+        const newUser = await tx.user.create({
+          data: {
+            fullname: data.name,
+            email: data.email,
+            username: data.username,
+            password: data.password,
+            profile: {
+              create: {},
+            },
           },
-        },
+        });
+        await streamServerClient.upsertUser({
+          id: newUser.id,
+          username: newUser.username,
+          name: newUser.fullname,
+        });
+        return newUser;
       });
-      if (newUser) {
+      if (user) {
         return {
           status: true,
           message: "User created successfully",
@@ -381,35 +390,51 @@ export async function addComment(data: any) {
 
 export async function updateProfil(data: any) {
   console.log(data.birthdate);
-  const user = await prisma.user.update({
-    where: {
-      id: data.id,
-    },
-    data: {
-      fullname: data.fullname,
-      email: data.email,
-      username: data.username,
-      profile: {
-        update: {
-          telp: data.telp ? data.telp : null,
-          address: data.address ? data.address : null,
-          gender: data.gender ? data.gender : null,
-          birthDate: data.birthdate
-            ? new Date(convertDateString(data.birthdate))
-            : null,
-          avatarUrl: data.avatarUrl,
+
+  const updatedUser = await prisma.$transaction(async (tx) => {
+    const user = await tx.user.update({
+      where: {
+        id: data.id,
+      },
+      data: {
+        fullname: data.fullname,
+        email: data.email,
+        username: data.username,
+        profile: {
+          update: {
+            telp: data.telp ? data.telp : null,
+            address: data.address ? data.address : null,
+            gender: data.gender ? data.gender : null,
+            birthDate: data.birthdate
+              ? new Date(convertDateString(data.birthdate))
+              : null,
+            avatarUrl: data.avatarUrl,
+          },
         },
       },
-    },
-    include: {
-      profile: true,
+      include: {
+        profile: true,
+      },
+    });
+    await streamServerClient.partialUpdateUser({
+      id: user.id,
+      set: {
+        name: user.fullname,
+      },
+    });
+    return user;
+  });
+  await streamServerClient.partialUpdateUser({
+    id: updatedUser.id,
+    set: {
+      image: updatedUser?.profile?.avatarUrl,
     },
   });
-  if (user) {
+  if (updatedUser) {
     return {
       status: true,
       message: "Profil berhasil diupdate",
-      data: user,
+      data: updatedUser,
     };
   } else {
     return { status: false, message: "Gagal mengedit profil" };

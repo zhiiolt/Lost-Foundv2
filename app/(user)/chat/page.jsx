@@ -12,6 +12,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Kontak } from "./components/Kontak";
 import photo from "@/assets/avatar/olly.jpg";
+import { Chat } from "./Chat";
 
 export const metadata = {
   title: "Lost & Found: Chat",
@@ -58,12 +59,8 @@ export default function ChatPage() {
   return (
     <div className='h-screen flex flex-col'>
       <Header breadcrumbs={breadcrumbs} />
-      <div className='p-4 flex-1'>
-        <Card className='w-full h-full border-slate-300'>
-          <CardContent className='h-full py-0 border-teal-700 pr-0'>
-            <Kontak contacts={contacts} />
-          </CardContent>
-        </Card>
+      <div className='p-8 flex-1'>
+        <Chat contacts={contacts} />
       </div>
     </div>
   );
