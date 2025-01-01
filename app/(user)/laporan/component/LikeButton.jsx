@@ -12,7 +12,9 @@ export default function LikeButton({ laporanId, initialState }) {
     queryKey,
     queryFn: async () => {
       const data = (
-        await fetch(`http://localhost:3000/api/likes?id=${laporanId}`)
+        await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/likes?id=${laporanId}`
+        )
       ).json();
       return data;
     },
@@ -23,12 +25,18 @@ export default function LikeButton({ laporanId, initialState }) {
   const { mutate } = useMutation({
     mutationFn: async () => {
       const res = data.isLiked
-        ? await fetch(`http://localhost:3000/api/likes?id=${laporanId}`, {
-            method: "DELETE",
-          })
-        : await fetch(`http://localhost:3000/api/likes?id=${laporanId}`, {
-            method: "POST",
-          });
+        ? await fetch(
+            `${process.env.NEXT_PUBLIC_API_URL}/api/likes?id=${laporanId}`,
+            {
+              method: "DELETE",
+            }
+          )
+        : await fetch(
+            `${process.env.NEXT_PUBLIC_API_URL}/api/likes?id=${laporanId}`,
+            {
+              method: "POST",
+            }
+          );
     },
     onMutate: async () => {
       await queryClient.cancelQueries({ queryKey });

@@ -157,7 +157,7 @@ export function DataTableRowActions<TData>({
               onClick={async () => {
                 setIsLoading(true);
                 const res = await fetch(
-                  `http://localhost:3000/api/laporan?id=${laporan.id}`,
+                  `${process.env.NEXT_PUBLIC_API_URL}/api/laporan?id=${laporan.id}`,
                   {
                     method: "DELETE",
                   }

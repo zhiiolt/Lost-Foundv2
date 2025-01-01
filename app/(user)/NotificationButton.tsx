@@ -30,7 +30,9 @@ export default function NotificationButton({ initialState }: any) {
     queryKey: ["unread-notification-count"],
     queryFn: async () => {
       const response = (
-        await fetch("http://localhost:3000/api/notifications/unread-count")
+        await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/notifications/unread-count`
+        )
       ).json();
       return response;
     },

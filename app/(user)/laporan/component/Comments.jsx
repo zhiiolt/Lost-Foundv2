@@ -52,7 +52,7 @@ export function Comments({ laporan }) {
     queryKey: ["komen"],
     queryFn: async ({ pageParam }) => {
       const res = await fetch(
-        `http://localhost:3000/api/comment${
+        `${process.env.NEXT_PUBLIC_API_URL}/api/comment${
           pageParam
             ? `?cursor=${pageParam}&id=${laporan.id}`
             : `?id=${laporan.id}`

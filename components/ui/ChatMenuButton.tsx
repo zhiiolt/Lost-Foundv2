@@ -10,7 +10,9 @@ export default function ChatButton({ initialState, item, path }: any) {
     queryKey: ["unread-messages-count"],
     queryFn: async () => {
       const response = (
-        await fetch("http://localhost:3000/api/messages/unread-count")
+        await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/messages/unread-count`
+        )
       ).json();
       return response;
     },

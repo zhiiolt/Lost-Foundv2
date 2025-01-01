@@ -104,10 +104,13 @@ export default function EditLaporan({ jenis }) {
 
     // Kirimkan menggunakan fetch
     try {
-      const res = await fetch("http://localhost:3000/api/laporan", {
-        method: "POST",
-        body: formData, // Kirim FormData
-      });
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/laporan`,
+        {
+          method: "POST",
+          body: formData, // Kirim FormData
+        }
+      );
 
       if (res.ok) {
         setShowDialog(true);

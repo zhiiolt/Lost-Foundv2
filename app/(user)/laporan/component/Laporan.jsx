@@ -29,7 +29,7 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { Suspense } from "react";
 
 async function getLaporan() {
-  const res = await fetch("http://localhost:3000/api/laporan", {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/laporan`, {
     cache: "no-store",
   });
   if (res.ok) {
@@ -52,7 +52,7 @@ export function Laporan() {
     queryKey: ["laporan-data"],
     queryFn: async ({ pageParam }) => {
       const res = await fetch(
-        `http://localhost:3000/api/laporan${
+        `${process.env.NEXT_PUBLIC_API_URL}/api/laporan${
           pageParam ? `?cursor=${pageParam}` : ""
         }`
       );

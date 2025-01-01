@@ -97,10 +97,13 @@ export default function EditLaporan({ laporan, setIsOpen }) {
 
     // Kirimkan menggunakan fetch
     try {
-      const res = await fetch("http://localhost:3000/api/laporan", {
-        method: "PUT",
-        body: formData, // Kirim FormData
-      });
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/laporan`,
+        {
+          method: "PUT",
+          body: formData, // Kirim FormData
+        }
+      );
 
       if (res.ok) {
         router.refresh();

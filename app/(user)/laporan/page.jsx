@@ -39,7 +39,7 @@ export const metadata = {
 };
 
 async function getLaporan() {
-  const res = await fetch("http://localhost:3000/api/laporan", {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/laporan`, {
     cache: "no-store",
   });
   if (res.ok) {

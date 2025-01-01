@@ -22,7 +22,7 @@ export const metadata: Metadata = {
 async function getLaporan() {
   const session = await getServerSession();
   const res = await fetch(
-    `http://localhost:3000/api/laporan?email=${session?.user?.email}`,
+    `${process.env.NEXT_PUBLIC_API_URL}/api/laporan?email=${session?.user?.email}`,
     {
       cache: "no-store",
     }

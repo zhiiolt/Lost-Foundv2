@@ -16,7 +16,9 @@ export default function useInitializeChatClient() {
         );
 
         // Ambil token dari API
-        const response = await fetch("http://localhost:3000/api/get-token");
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/get-token`
+        );
         const data = await response.json();
         const token = data.token;
 

@@ -35,7 +35,7 @@ export default function Activity() {
     queryKey: ["notification"],
     queryFn: async ({ pageParam }) => {
       const res = await fetch(
-        `http://localhost:3000/api/notifications${
+        `${process.env.NEXT_PUBLIC_API_URL}/api/notifications${
           pageParam ? `?cursor=${pageParam}` : ""
         }`
       );
@@ -51,9 +51,12 @@ export default function Activity() {
   const queryClient = useQueryClient();
   const { mutate } = useMutation({
     mutationFn: async () => {
-      await fetch("http://localhost:3000/api/notifications/mark-as-read", {
-        method: "PATCH",
-      });
+      await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/notifications/mark-as-read`,
+        {
+          method: "PATCH",
+        }
+      );
     },
     onSuccess: () => {
       queryClient.setQueryData(["unread-notification-count"], {

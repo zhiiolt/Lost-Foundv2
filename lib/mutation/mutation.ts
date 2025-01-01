@@ -8,7 +8,7 @@ import {
 import { toast } from "sonner";
 
 async function addComent(data: any) {
-  const res = await fetch("http://localhost:3000/api/comment", {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/comment`, {
     method: "POST",
     body: JSON.stringify({
       laporanId: data.laporanId,
