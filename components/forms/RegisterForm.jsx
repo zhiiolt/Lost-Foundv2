@@ -190,7 +190,13 @@ export default function LoginForm() {
               )}
               Buat Akun
             </Button>
-            <Button variant='outline' className='w-full'>
+            <Button
+              onClick={() =>
+                signIn("google", { callbackUrl: "/dashboard", redirect: false })
+              }
+              type='button'
+              variant='outline'
+              className='w-full'>
               <IconBrandGoogle /> Registrasi dengan Google
             </Button>
           </div>

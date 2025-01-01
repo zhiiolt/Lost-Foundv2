@@ -11,7 +11,7 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 
-export default function CarouselSize() {
+export default function CarouselSize({ recent }: any) {
   return (
     <Carousel
       opts={{
@@ -19,10 +19,10 @@ export default function CarouselSize() {
       }}
       className='max-w-[950px]'>
       <CarouselContent>
-        {Array.from({ length: 6 }).map((_, index) => (
+        {recent.map((laporan: any, index: any) => (
           <CarouselItem key={index} className='md:basis-1/2 lg:basis-1/3'>
             <div className='p-1 max-w-[400px]'>
-              <CardLaporan />
+              <CardLaporan laporan={laporan} />
             </div>
           </CarouselItem>
         ))}

@@ -19,14 +19,6 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
-const chartData = [
-  { month: "January", penemuan: 186, kehilangan: 80 },
-  { month: "February", penemuan: 305, kehilangan: 200 },
-  { month: "March", penemuan: 237, kehilangan: 120 },
-  { month: "April", penemuan: 73, kehilangan: 190 },
-  { month: "May", penemuan: 209, kehilangan: 130 },
-  { month: "June", penemuan: 214, kehilangan: 140 },
-];
 
 const chartConfig = {
   penemuan: {
@@ -39,12 +31,19 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-export default function StatistikPerBulan() {
+export default function StatistikPerBulan({ data }: any) {
+  if (data.length == 0) {
+    return (
+      <div className='text-xs text-muted-foreground mx-auto flex items-center justify-center h-full w-full'>
+        <span className=''>Anda belum memiliki laporan apa pun.</span>
+      </div>
+    );
+  }
   return (
     <ChartContainer config={chartConfig} className='max-h-[350px] mx-auto'>
       <AreaChart
         accessibilityLayer
-        data={chartData}
+        data={data}
         margin={{
           left: 12,
           right: 12,

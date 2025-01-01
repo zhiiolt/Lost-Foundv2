@@ -14,13 +14,6 @@ import {
   ChartLegend,
   ChartLegendContent,
 } from "@/components/ui/chart";
-const chartData = [
-  { kategori: "elektronik", jumlah: 5, fill: "var(--color-elektronik)" },
-  { kategori: "dokumen", jumlah: 6, fill: "var(--color-dokumen)" },
-  { kategori: "kunci", jumlah: 2, fill: "var(--color-kunci)" },
-  { kategori: "aksesoris", jumlah: 7, fill: "var(--color-aksesoris)" },
-  { kategori: "hewan", jumlah: 1, fill: "var(--color-hewan)" },
-];
 
 const chartConfig = {
   jumlah: {
@@ -48,9 +41,24 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-export default function ChartKategoriLaporan() {
+export default function ChartKategoriLaporan({ data }: any) {
+  if (data.length == 0) {
+    return (
+      <div className='text-xs text-muted-foreground mx-auto flex items-center justify-center h-full w-full'>
+        <span className=''>Anda belum memiliki laporan apa pun.</span>
+      </div>
+    );
+  }
+  const chartData =
+    data &&
+    data.map((item: any) => ({
+      kategori: item.kategori,
+      jumlah: item._count.id, // Sesuaikan dengan struktur data `item`
+      fill: `var(--color-${item.kategori})`,
+    }));
+
   const totalLaporan = React.useMemo(() => {
-    return chartData.reduce((acc, curr) => acc + curr.jumlah, 0);
+    return chartData.reduce((acc: any, curr: any) => acc + curr.jumlah, 0);
   }, []);
 
   return (

@@ -25,13 +25,126 @@ import { IconEye } from "@tabler/icons-react";
 import Link from "next/link";
 import { IconActivity } from "@tabler/icons-react";
 import { IconInfoCircle } from "@tabler/icons-react";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import prisma from "@/lib/prisma/db";
+import { subMonths, startOfMonth, endOfMonth, format } from "date-fns";
 
 export const metadata = {
   title: "Lost & Found: Dashboard",
   description: "A task and issue tracker build using Tanstack Table.",
 };
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
+  const session = await getServerSession(authOptions);
+
+  const recent = await prisma.laporan.findMany({
+    orderBy: {
+      createdAt: "desc",
+    },
+    include: {
+      user: {
+        include: {
+          profile: true,
+        },
+      },
+      comments: {
+        include: {
+          user: {
+            include: {
+              profile: true,
+            },
+          },
+        },
+      },
+      likes: {
+        include: {
+          user: true,
+        },
+      },
+    },
+    take: 6,
+  });
+
+  const laporanPerUser = await prisma.laporan.count({
+    where: {
+      userId: session.user.id,
+    },
+  });
+
+  const resolvedCount = await prisma.laporan.count({
+    where: {
+      userId: session.user.id, // Filter berdasarkan user
+      status: {
+        in: ["ditemukan", "dikembalikan"], // Status penyelesaian
+      },
+    },
+  });
+
+  const completionRate =
+    laporanPerUser > 0 ? (resolvedCount / laporanPerUser) * 100 : 0;
+
+  const laporanPerJenis = await prisma.laporan.groupBy({
+    by: ["jenis"], // Kelompokkan berdasarkan jenis
+    where: {
+      userId: session.user.id, // Filter berdasarkan userId
+    },
+    _count: {
+      id: true, // Hitung jumlah laporan
+    },
+  });
+
+  const laporanPerKategori = await prisma.laporan.groupBy({
+    by: ["kategori"], // Kelompokkan berdasarkan kategori
+    where: {
+      userId: session.user.id, // Filter berdasarkan userId
+    },
+    _count: {
+      id: true, // Hitung jumlah laporan
+    },
+  });
+
+  const today = new Date();
+  const startDate = startOfMonth(subMonths(today, 5)); // Awal bulan 6 bulan lalu
+  const endDate = endOfMonth(today); // Akhir bulan ini
+
+  // Query Prisma
+  const rawData = await prisma.laporan.groupBy({
+    by: ["tanggal", "jenis"], // Grup berdasarkan tanggal dan jenis
+    _count: {
+      id: true, // Hitung jumlah laporan
+    },
+    where: {
+      userId: session.user.id,
+      tanggal: {
+        gte: startDate, // Tanggal mulai (6 bulan lalu)
+        lte: endDate, // Tanggal akhir (bulan ini)
+      },
+    },
+  });
+
+  const chartData = rawData.reduce((acc, item) => {
+    const month = format(new Date(item.tanggal), "MMMM"); // Nama bulan
+    const jenis = item.jenis;
+    const jumlah = item._count.id;
+
+    // Cari atau buat entry untuk bulan
+    let monthData = acc.find((entry) => entry.month === month);
+    if (!monthData) {
+      monthData = { month, penemuan: 0, kehilangan: 0 };
+      acc.push(monthData);
+    }
+
+    // Tambahkan jumlah ke jenis yang sesuai
+    if (jenis === "penemuan") {
+      monthData.penemuan += jumlah;
+    } else if (jenis === "kehilangan") {
+      monthData.kehilangan += jumlah;
+    }
+
+    return acc;
+  }, []);
+
   const breadcrumbs = [
     { title: "Dashboard" },
     // halaman terakhir tanpa link
@@ -51,10 +164,9 @@ export default function DashboardPage() {
                 <IconReport className='text-teal-500' />
               </CardHeader>
               <CardContent className='pl-8'>
-                <div className='text-3xl text-teal-500 font-bold'>21</div>
-                <p className='text-xs text-muted-foreground'>
-                  +20.1% from last month
-                </p>
+                <div className='text-3xl text-teal-500 font-bold'>
+                  {laporanPerUser}
+                </div>
               </CardContent>
               <CardFooter>
                 <Link href='/laporan/riwayat' className='w-full pl-2'>
@@ -75,10 +187,9 @@ export default function DashboardPage() {
                 <IconWaveSawTool className='text-red-400' />
               </CardHeader>
               <CardContent className='pl-8'>
-                <div className='text-3xl text-red-400 font-bold'>65.7%</div>
-                <p className='text-xs text-muted-foreground'>
-                  +8.5% from last month
-                </p>
+                <div className='text-3xl text-red-400 font-bold'>
+                  {completionRate.toFixed(2)}%
+                </div>
               </CardContent>
             </Card>
             <Card className='relative'>
@@ -210,7 +321,7 @@ export default function DashboardPage() {
                 <CardTitle>Statistik Jenis Laporan</CardTitle>
               </CardHeader>
               <CardContent className='flex-1 pb-0 mt-4'>
-                <ChartJenisLaporan />
+                <ChartJenisLaporan data={laporanPerJenis} />
               </CardContent>
             </Card>
 
@@ -218,8 +329,8 @@ export default function DashboardPage() {
               <CardHeader className='items-center pb-0'>
                 <CardTitle>Statistik Kategori Laporan</CardTitle>
               </CardHeader>
-              <CardContent className='flex-1 pb-0'>
-                <ChartKategoriLaporan />
+              <CardContent className='flex-1 pb-0 mt-4 min-h-[200px]'>
+                <ChartKategoriLaporan data={laporanPerKategori} />
               </CardContent>
             </Card>
           </div>
@@ -232,7 +343,7 @@ export default function DashboardPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className='flex-1 pb-0'>
-              <StatistikPerBulan />
+              <StatistikPerBulan data={chartData} />
             </CardContent>
           </Card>
 
@@ -253,7 +364,7 @@ export default function DashboardPage() {
             Laporan Terbaru
           </h3>
           <div className='flex justify-center px-12 box-border'>
-            <RecentLaporan />
+            <RecentLaporan recent={recent} />
           </div>
         </div>
       </div>

@@ -13,10 +13,6 @@ import {
   ChartLegend,
   ChartLegendContent,
 } from "@/components/ui/chart";
-const chartData = [
-  { jenis: "kehilangan", jumlah: 8, fill: "var(--color-kehilangan)" },
-  { jenis: "penemuan", jumlah: 13, fill: "var(--color-penemuan)" },
-];
 
 const chartConfig = {
   jumlah: {
@@ -32,7 +28,22 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-export default function ChartJenisLaporan() {
+export default function ChartJenisLaporan({ data }: any) {
+  if (data.length == 0) {
+    return (
+      <div className='text-xs text-muted-foreground mx-auto flex items-center justify-center h-full w-full'>
+        <span className=''>Anda belum memiliki laporan apa pun.</span>
+      </div>
+    );
+  }
+  const chartData =
+    data &&
+    data.map((item: any) => ({
+      jenis: item.jenis,
+      jumlah: item._count.id, // Sesuaikan dengan struktur data `item`
+      fill: `var(--color-${item.jenis})`,
+    }));
+
   return (
     <ChartContainer
       config={chartConfig}

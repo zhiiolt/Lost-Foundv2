@@ -138,6 +138,13 @@ export async function loginWithGoogle(data: any) {
       },
     });
 
+    await streamServerClient.upsertUser({
+      id: newUser.id,
+      username: newUser.username,
+      name: newUser.fullname,
+      image: newUser.profile?.avatarUrl,
+    });
+
     return {
       status: true,
       data: newUser,
