@@ -12,7 +12,7 @@ import { Chat as StreamChat } from "stream-chat-react";
 import ChatSidebar from "./ChatSidebar";
 import ChatChannel from "./ChatChannel";
 
-export const Chat = ({ contacts }) => {
+export const Chat = () => {
   const chatClient = useInitializeChatClient();
 
   const [sidebarOpen, setSidebarOpen] = useState(false);

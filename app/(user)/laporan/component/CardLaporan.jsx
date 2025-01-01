@@ -52,6 +52,7 @@ export function CardLaporan({
 }) {
   const { data: session } = useSession();
   const queryClient = useQueryClient();
+  const router = useRouter();
   const isLike = (item) => {
     const like = item.find((like) => like.userId === session?.user?.id);
 
@@ -61,12 +62,9 @@ export function CardLaporan({
       return { status: false };
     }
   };
-  const router = useRouter();
-
-  const breadcrumbs = [
-    { title: "Laporan" },
-    // halaman terakhir tanpa link
-  ];
+  const handleContactReporter = (reporterId) => {
+    router.push(`/chat?userId=${reporterId}`);
+  };
 
   laporan.map((item) => console.log(isLike(item.likes)));
 
@@ -243,6 +241,7 @@ export function CardLaporan({
                       </div>
                       {session?.user?.email !== item.user.email && (
                         <Button
+                          onClick={() => handleContactReporter(item.user.id)}
                           className={`w-full disabled:cursor-not-allowed disabled:hover:cursor-not-allowed`}
                           disabled={item.status !== "hilang"}>
                           <IconMessageCircle2Filled /> Hubungi Pelapor
