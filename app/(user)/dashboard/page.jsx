@@ -335,7 +335,7 @@ export default async function DashboardPage() {
             </Card>
           </div>
 
-          <Card className='lg:col-span-3 flex flex-col gap-4'>
+          <Card className='lg:col-span-4 flex flex-col gap-4'>
             <CardHeader className='items-center pb-0'>
               <CardTitle>Statistik Laporan per Bulan</CardTitle>
               <CardDescription>
@@ -344,18 +344,6 @@ export default async function DashboardPage() {
             </CardHeader>
             <CardContent className='flex-1 pb-0'>
               <StatistikPerBulan data={chartData} />
-            </CardContent>
-          </Card>
-
-          <Card className='lg:col-span-3 max-h-[400px]'>
-            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-              <CardTitle className='text-sm font-medium'>
-                Recent Activity
-              </CardTitle>
-              <IconInfoCircle />
-            </CardHeader>
-            <CardContent>
-              <Activity />
             </CardContent>
           </Card>
         </div>
