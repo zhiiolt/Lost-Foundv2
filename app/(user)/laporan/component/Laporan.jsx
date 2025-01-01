@@ -25,8 +25,7 @@ import { isThisMonth, isThisWeek, isToday } from "date-fns";
 
 import { CardLaporan } from "./CardLaporan";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useSession } from "next-auth/react";
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { Suspense } from "react";
 
 async function getLaporan() {
@@ -61,11 +60,11 @@ export function Laporan() {
         const data = await res.json();
         return data.data;
       } else {
-        return [];
+        return { laporan: [], nextCursor: null };
       }
     },
     initialPageParam: null,
-    getNextPageParam: (lastPage) => lastPage.nextCursor,
+    getNextPageParam: (lastPage) => lastPage?.nextCursor,
   });
 
   if (status === "loading") {
@@ -75,19 +74,19 @@ export function Laporan() {
   if (status === "error") {
     return <div className='text-red-500'>Failed to load data</div>;
   }
+
   const [filters, setFilters] = React.useState({
     statuses: [],
     kategori: [],
     waktu: "semua",
   });
-  if (status == "success") {
-    console.log(data);
-  }
+
   const filteredLaporan =
     status === "success"
       ? data.pages
-          .flatMap((page) => page.laporan)
+          .flatMap((page) => page?.laporan || [])
           .filter((item) => {
+            if (!item) return false; // Abaikan item yang null/undefined
             const filterStatus =
               filters.statuses.length === 0 ||
               filters.statuses.includes(item.status);
@@ -132,7 +131,7 @@ export function Laporan() {
             <TabsContent value='kehilangan'>
               <CardLaporan
                 laporan={filteredLaporan.filter(
-                  (item) => item.jenis === "kehilangan"
+                  (item) => item?.jenis === "kehilangan"
                 )}
                 filters={filters}
                 fetchNext={fetchNextPage}
@@ -144,7 +143,7 @@ export function Laporan() {
             <TabsContent value='penemuan'>
               <CardLaporan
                 laporan={filteredLaporan.filter(
-                  (item) => item.jenis === "penemuan"
+                  (item) => item?.jenis === "penemuan"
                 )}
                 filters={filters}
                 fetchNext={fetchNextPage}
@@ -235,9 +234,9 @@ const FilterBox = ({ filters, setFilters }) => {
                 <Checkbox
                   id={kat.value}
                   checked={filters.kategori.includes(kat.value)}
-                  onCheckedChange={() => {
-                    handleCheckboxChange("kategori", kat.value);
-                  }}
+                  onCheckedChange={() =>
+                    handleCheckboxChange("kategori", kat.value)
+                  }
                 />
                 <Label htmlFor={kat.value} className='text-sm leading-none'>
                   {kat.label}
@@ -262,28 +261,20 @@ const FilterBox = ({ filters, setFilters }) => {
           <CollapsibleContent className='space-y-3 py-4 px-2'>
             <RadioGroup value={filters.waktu} onValueChange={handleRadioChange}>
               <div className='flex items-center space-x-2'>
-                <RadioGroupItem value='semua' id='r1' />
-                <Label htmlFor='r1' className='text-sm leading-none'>
-                  Semua waktu
-                </Label>
+                <RadioGroupItem value='semua' id='semua' />
+                <Label htmlFor='semua'>Semua</Label>
               </div>
               <div className='flex items-center space-x-2'>
-                <RadioGroupItem value='hari' id='r2' />
-                <Label htmlFor='r2' className='text-sm leading-none'>
-                  Hari ini
-                </Label>
+                <RadioGroupItem value='hari' id='hari' />
+                <Label htmlFor='hari'>Hari Ini</Label>
               </div>
               <div className='flex items-center space-x-2'>
-                <RadioGroupItem value='minggu' id='r3' />
-                <Label htmlFor='r3' className='text-sm leading-none'>
-                  Minggu ini
-                </Label>
+                <RadioGroupItem value='minggu' id='minggu' />
+                <Label htmlFor='minggu'>Minggu Ini</Label>
               </div>
               <div className='flex items-center space-x-2'>
-                <RadioGroupItem value='bulan' id='r4' />
-                <Label htmlFor='r4' className='text-sm leading-none'>
-                  Bulan ini
-                </Label>
+                <RadioGroupItem value='bulan' id='bulan' />
+                <Label htmlFor='bulan'>Bulan Ini</Label>
               </div>
             </RadioGroup>
           </CollapsibleContent>
