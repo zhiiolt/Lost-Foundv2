@@ -59,12 +59,14 @@ import {
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { IconRosetteDiscountCheckFilled } from "@tabler/icons-react";
+import { useEdgeStore } from "@/lib/edgestore";
 
 export default function EditLaporan({ jenis }) {
   const fileInputRef = useRef(null);
   const [image, setImage] = useState("");
   const [filename, setFilename] = useState("");
   const [showDialog, setShowDialog] = React.useState(false);
+  const { edgestore } = useEdgeStore();
   const defaults = {
     jenis: jenis,
     status: statuses[0].value,
@@ -99,7 +101,16 @@ export default function EditLaporan({ jenis }) {
 
     // Tambahkan file jika ada
     if (data.foto) {
-      formData.set("foto", data.foto);
+      if (data.foto instanceof File) {
+        const res = await edgestore.publicFiles.upload({
+          file: data.foto,
+        });
+        formData.set("foto", res.url);
+      } else {
+        formData.set("foto", data.foto);
+      }
+    } else {
+      formData.set("foto", null);
     }
 
     // Kirimkan menggunakan fetch

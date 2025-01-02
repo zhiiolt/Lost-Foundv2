@@ -11,6 +11,10 @@ import Providers from "./provider";
 import { getServerSession } from "next-auth";
 import { authOptions } from "./api/auth/[...nextauth]/route";
 import ReactQueryProvider from "./ReactQueryProvider";
+import { NextSSRPlugin } from "@uploadthing/react/next-ssr-plugin";
+import { extractRouterConfig } from "uploadthing/server";
+import { fileRouter } from "./api/uploadthing/core";
+import { EdgeStoreProvider } from "@/lib/edgestore";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -39,9 +43,13 @@ export default async function RootLayout({
       <body
         className={`${inter.className} ${geistMono.variable} antialiased bg-[#EAEEFE]`}>
         <Providers session={session}>
+          <NextSSRPlugin routerConfig={extractRouterConfig(fileRouter)} />
           <ReactQueryProvider>
-            {children}
-            <Toaster />
+            <EdgeStoreProvider>
+              {children}
+
+              <Toaster />
+            </EdgeStoreProvider>
           </ReactQueryProvider>
         </Providers>
       </body>

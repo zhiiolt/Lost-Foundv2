@@ -29,6 +29,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useEdgeStore } from "@/lib/edgestore";
 
 import {
   Popover,
@@ -56,6 +57,7 @@ export default function EditLaporan({ laporan, setIsOpen }) {
   const fileInputRef = useRef(null);
   const [image, setImage] = useState(laporan.fotoUrl);
   const [filename, setFilename] = useState("Hapus Foto");
+  const { edgestore } = useEdgeStore();
   const router = useRouter();
   const defaults = {
     judul: laporan.judul,
@@ -92,7 +94,16 @@ export default function EditLaporan({ laporan, setIsOpen }) {
 
     // Tambahkan file jika ada
     if (data.foto) {
-      formData.set("foto", data.foto);
+      if (data.foto instanceof File) {
+        const res = await edgestore.publicFiles.upload({
+          file: data.foto,
+        });
+        formData.set("foto", res.url);
+      } else {
+        formData.set("foto", data.foto);
+      }
+    } else {
+      formData.set("foto", null);
     }
 
     // Kirimkan menggunakan fetch

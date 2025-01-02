@@ -10,6 +10,8 @@
     "postinstall": "prisma generate"
   },
   "dependencies": {
+    "@edgestore/react": "^0.2.2",
+    "@edgestore/server": "^0.2.2",
     "@hookform/resolvers": "^3.9.1",
     "@prisma/client": "6.1.0",
     "@radix-ui/react-alert-dialog": "^1.1.4",
@@ -33,6 +35,7 @@
     "@tanstack/react-query": "^5.62.10",
     "@tanstack/react-query-devtools": "^5.62.10",
     "@tanstack/react-table": "^8.20.6",
+    "@uploadthing/react": "^7.1.5",
     "bcrypt": "^5.1.1",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
@@ -60,6 +63,7 @@
     "stream-chat-react": "^12.8.1",
     "tailwind-merge": "^2.5.4",
     "tailwindcss-animate": "^1.0.7",
+    "uploadthing": "^7.4.4",
     "zod": "^3.23.8"
   },
   "devDependencies": {

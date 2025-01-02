@@ -54,9 +54,11 @@ import { IconEdit } from "@tabler/icons-react";
 import { useSession } from "next-auth/react";
 import { useEffect } from "react";
 import { getInitials } from "@/lib/initials";
+import { useEdgeStore } from "@/lib/edgestore";
+
 export function Profil() {
   const { data: session, status, update } = useSession();
-  console.log(session);
+  const { edgestore } = useEdgeStore();
 
   const fileInputRef = useRef(null);
   const [image, setImage] = useState(session.user.avatarUrl);
@@ -94,7 +96,15 @@ export function Profil() {
 
     // Tambahkan file jika ada
     if (data.profilePicture) {
-      formData.set("foto", data.profilePicture);
+      if (data.profilePicture instanceof File) {
+        console.log("yes");
+        const res = await edgestore.publicFiles.upload({
+          file: data.profilePicture,
+        });
+        formData.set("foto", res.url);
+      } else {
+        formData.set("foto", data.profilePicture);
+      }
     } else {
       formData.set("foto", null);
     }
