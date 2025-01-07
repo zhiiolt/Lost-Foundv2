@@ -60,6 +60,7 @@ export const LaporanSchema = z.object({
         ["image/png", "image/jpeg", "image/jpg"].includes(file.type),
       { message: "Invalid image file type" }
     ),
+  helper: z.string().optional(),
 });
 
 export const LoginSchema = z.object({

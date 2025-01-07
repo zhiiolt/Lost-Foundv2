@@ -29,14 +29,25 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import prisma from "@/lib/prisma/db";
 import { subMonths, startOfMonth, endOfMonth, format } from "date-fns";
+import { getInitials } from "@/lib/initials";
 
 export const metadata = {
   title: "Lost & Found: Dashboard",
   description: "A task and issue tracker build using Tanstack Table.",
 };
 
+async function getLeaderboard() {
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/api/leaderboard`
+  );
+  const data = await response.json();
+  return data;
+}
+
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
+  const leaderboard = await getLeaderboard();
+  const rank = leaderboard.find((data) => data.userId === session.user.id).rank;
 
   const recent = await prisma.laporan.findMany({
     orderBy: {
@@ -201,8 +212,7 @@ export default async function DashboardPage() {
                 <IconSparkles className='text-yellow-500' />
               </CardHeader>
               <CardContent className='pl-8'>
-                <div className='text-3xl text-yellow-500 font-bold'>212</div>
-                <p className='text-xs text-muted-foreground'>Top 3%</p>
+                <div className='text-3xl text-yellow-500 font-bold'>{rank}</div>
               </CardContent>
               <CardFooter>
                 <Link href='/laporan/riwayat' className='w-full pl-2'>
@@ -222,97 +232,26 @@ export default async function DashboardPage() {
               </CardTitle>
               <IconGraphFilled className='text-teal-700' />
             </CardHeader>
-            <CardContent className='grid gap-8 py-4 '>
-              <div className='flex items-center gap-4'>
-                <Avatar className='hidden h-9 w-9 sm:flex'>
-                  <AvatarImage src='/avatars/04.png' alt='Avatar' />
-                  <AvatarFallback>WK</AvatarFallback>
-                </Avatar>
-                <div className='grid gap-1'>
-                  <p className='text-sm font-medium leading-none'>
-                    William Kim
-                  </p>
-                  <p className='text-sm text-muted-foreground'>
-                    will@email.com
-                  </p>
+            <CardContent className='grid gap-8 py-4'>
+              {leaderboard.map((data, index) => (
+                <div className='flex items-center gap-4' key={index}>
+                  <Avatar className='hidden h-9 w-9 sm:flex'>
+                    <AvatarImage src={data.avatarUrl} alt='Avatar' />
+                    <AvatarFallback>
+                      {getInitials(data.fullname)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className='grid gap-1 max-w-[150px]'>
+                    <p className='text-sm font-medium leading-none overflow-hidden text-ellipsis whitespace-nowrap'>
+                      {data.fullname}
+                    </p>
+                    <p className='text-sm text-muted-foreground overflow-hidden text-ellipsis whitespace-nowrap'>
+                      {data.email}
+                    </p>
+                  </div>
+                  <div className='ml-auto font-medium'>{data.points}</div>
                 </div>
-                <div className='ml-auto font-medium'>+$99.00</div>
-              </div>
-              <div className='flex items-center gap-4'>
-                <Avatar className='hidden h-9 w-9 sm:flex'>
-                  <AvatarImage src='/avatars/04.png' alt='Avatar' />
-                  <AvatarFallback>WK</AvatarFallback>
-                </Avatar>
-                <div className='grid gap-1'>
-                  <p className='text-sm font-medium leading-none'>
-                    William Kim
-                  </p>
-                  <p className='text-sm text-muted-foreground'>
-                    will@email.com
-                  </p>
-                </div>
-                <div className='ml-auto font-medium'>+$99.00</div>
-              </div>
-              <div className='flex items-center gap-4'>
-                <Avatar className='hidden h-9 w-9 sm:flex'>
-                  <AvatarImage src='/avatars/05.png' alt='Avatar' />
-                  <AvatarFallback>SD</AvatarFallback>
-                </Avatar>
-                <div className='grid gap-1'>
-                  <p className='text-sm font-medium leading-none'>
-                    Sofia Davis
-                  </p>
-                  <p className='text-sm text-muted-foreground'>
-                    sofia.davis@email.com
-                  </p>
-                </div>
-                <div className='ml-auto font-medium'>+$39.00</div>
-              </div>
-              <div className='flex items-center gap-4'>
-                <Avatar className='hidden h-9 w-9 sm:flex'>
-                  <AvatarImage src='/avatars/05.png' alt='Avatar' />
-                  <AvatarFallback>SD</AvatarFallback>
-                </Avatar>
-                <div className='grid gap-1'>
-                  <p className='text-sm font-medium leading-none'>
-                    Sofia Davis
-                  </p>
-                  <p className='text-sm text-muted-foreground'>
-                    sofia.davis@email.com
-                  </p>
-                </div>
-                <div className='ml-auto font-medium'>+$39.00</div>
-              </div>
-              <div className='flex items-center gap-4'>
-                <Avatar className='hidden h-9 w-9 sm:flex'>
-                  <AvatarImage src='/avatars/05.png' alt='Avatar' />
-                  <AvatarFallback>SD</AvatarFallback>
-                </Avatar>
-                <div className='grid gap-1'>
-                  <p className='text-sm font-medium leading-none'>
-                    Sofia Davis
-                  </p>
-                  <p className='text-sm text-muted-foreground'>
-                    sofia.davis@email.com
-                  </p>
-                </div>
-                <div className='ml-auto font-medium'>+$39.00</div>
-              </div>
-              <div className='flex items-center gap-4'>
-                <Avatar className='hidden h-9 w-9 sm:flex'>
-                  <AvatarImage src='/avatars/05.png' alt='Avatar' />
-                  <AvatarFallback>SD</AvatarFallback>
-                </Avatar>
-                <div className='grid gap-1'>
-                  <p className='text-sm font-medium leading-none'>
-                    Sofia Davis
-                  </p>
-                  <p className='text-sm text-muted-foreground'>
-                    sofia.davis@email.com
-                  </p>
-                </div>
-                <div className='ml-auto font-medium'>+$39.00</div>
-              </div>
+              ))}
             </CardContent>
           </Card>
           <div className='grid lg:grid-cols-2 lg:col-span-4 gap-4'>

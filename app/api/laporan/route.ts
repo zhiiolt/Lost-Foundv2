@@ -130,6 +130,7 @@ export async function PUT(request: NextRequest) {
     ciri: req.get("ciri"),
     lokasi: req.get("lokasi"),
     fotoUrl: req.get("foto"),
+    helperId: req.get("helperId"),
   };
 
   const result = await updateLaporan(newLaporan);

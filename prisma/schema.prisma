@@ -14,14 +14,13 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  fullname  String
-  email     String   @unique
-  username  String   @unique
-  password  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
+  id                    String         @id @default(cuid())
+  fullname              String
+  email                 String         @unique
+  username              String         @unique
+  password              String
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
   profile               Profile?
   laporan               Laporan[]
   comments              Comment[]
@@ -29,6 +28,7 @@ model User {
   notificationsSent     Notification[] @relation("sender")
   notificationsReceived Notification[] @relation("receiver")
   logActivities         LogActivity[]
+  helpers               Laporan[]      @relation("helper")
 }
 
 model Profile {
@@ -61,6 +61,8 @@ model Laporan {
   comments      Comment[]
   likes         Likes[]
   notifications Notification[]
+  helperId      String? // Optional helper field
+  helper        User?          @relation("helper", fields: [helperId], references: [id])
 }
 
 model Comment {

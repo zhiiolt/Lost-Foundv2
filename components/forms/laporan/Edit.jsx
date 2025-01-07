@@ -1,12 +1,20 @@
 /** @format */
 "use client";
 
-import { Loader2 } from "lucide-react";
+import { ChevronsUpDown, Loader2, Check } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import Image from "next/image";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 
 import { cn } from "@/lib/utils";
 import {
@@ -20,6 +28,7 @@ import {
 } from "@/components/ui/form";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
   SelectContent,
@@ -30,7 +39,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useEdgeStore } from "@/lib/edgestore";
-
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Popover,
   PopoverContent,
@@ -52,8 +61,23 @@ import {
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
+import { getInitials } from "@/lib/initials";
 
 export default function EditLaporan({ laporan, setIsOpen }) {
+  console.log(laporan);
+  const { data, status } = useQuery({
+    queryKey: ["user-data"],
+    queryFn: async () => {
+      const response = (
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/user`)
+      ).json();
+      return response;
+    },
+  });
+  if (status == "success") {
+    console.log(data);
+  }
   const fileInputRef = useRef(null);
   const [image, setImage] = useState(laporan.fotoUrl);
   const [filename, setFilename] = useState("Hapus Foto");
@@ -70,6 +94,7 @@ export default function EditLaporan({ laporan, setIsOpen }) {
     foto: laporan.fotoUrl,
     status: laporan.status,
     jenis: laporan.jenis,
+    helper: laporan.helperId,
   };
 
   const form = useForm({
@@ -78,6 +103,7 @@ export default function EditLaporan({ laporan, setIsOpen }) {
   });
 
   const onSubmit = async (data) => {
+    console.log(data);
     const formData = new FormData();
 
     // Tambahkan semua field ke dalam FormData
@@ -91,6 +117,7 @@ export default function EditLaporan({ laporan, setIsOpen }) {
     formData.set("tanggal", data.tanggal ? data.tanggal.toLocaleString() : "");
     formData.set("ciri", data.ciri);
     formData.set("lokasi", data.lokasi);
+    formData.set("helperId", data.helper);
 
     // Tambahkan file jika ada
     if (data.foto) {
@@ -464,6 +491,112 @@ export default function EditLaporan({ laporan, setIsOpen }) {
                   </FormItem>
                 )}
               />
+            </div>
+            <div>
+              {status == "success" ? (
+                <FormField
+                  className='w-full'
+                  control={form.control}
+                  name='helper'
+                  render={({ field }) => (
+                    <FormItem className='flex flex-col w-full'>
+                      <FormLabel>Helper</FormLabel>
+                      <Popover modal={true} className='z-[50000] w-full'>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant='outline'
+                              role='combobox'
+                              className={cn(
+                                "w-full justify-between h-12",
+                                !field.value && "text-muted-foreground"
+                              )}>
+                              {field.value ? (
+                                <div className='flex items-center'>
+                                  <Avatar className='me-2 object-cover size-8'>
+                                    <AvatarImage
+                                      src={
+                                        data.find(
+                                          (user) => user.id === field.value
+                                        )?.profile.avatarUrl
+                                      }
+                                      className='object-cover'
+                                    />
+                                    <AvatarFallback>
+                                      {getInitials(
+                                        data.find(
+                                          (user) => user.id === field.value
+                                        )?.fullname
+                                      )}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <span>
+                                    {
+                                      data.find(
+                                        (user) => user.id === field.value
+                                      )?.fullname
+                                    }
+                                  </span>
+                                </div>
+                              ) : (
+                                "Cari User"
+                              )}
+                              <ChevronsUpDown className='opacity-50' />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent
+                          side='left'
+                          className='w-fit p-0 z-[9999]'
+                          onWheel={(e) => e.stopPropagation()}>
+                          <Command className='z-[9999] w-full'>
+                            <CommandInput
+                              placeholder='Cari user...'
+                              className='h-9 w-full z-[9999]'
+                            />
+                            <CommandList>
+                              <CommandEmpty>User tidak ditemukan.</CommandEmpty>
+                              <CommandGroup>
+                                {data.map((user) => (
+                                  <CommandItem
+                                    className='hover:cursor-pointer'
+                                    value={user.fullname}
+                                    key={user.id}
+                                    onSelect={() => {
+                                      form.setValue("helper", user.id);
+                                    }}>
+                                    <Avatar className='me-3 object-cover'>
+                                      <AvatarImage
+                                        src={user.profile.avatarUrl}
+                                        className='object-cover'
+                                      />
+                                      <AvatarFallback>
+                                        {getInitials(user.fullname)}
+                                      </AvatarFallback>
+                                    </Avatar>
+                                    {user.fullname}
+                                    <Check
+                                      className={cn(
+                                        "ml-auto",
+                                        user.id === field.value
+                                          ? "opacity-100"
+                                          : "opacity-0"
+                                      )}
+                                    />
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              ) : (
+                <Skeleton className='w-[100px] h-[20px] rounded-full' />
+              )}
             </div>
           </div>
 

@@ -46,6 +46,7 @@ export const laporanSchema = z.object({
   lokasi: z.string(),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
+  helperId: z.string().nullable(),
   user: userSchema,
   comments: z.array(commentSchema).optional(), // Modify based on actual comment structure
   likes: z.array(z.any()).optional(), // Modify based on actual like structure

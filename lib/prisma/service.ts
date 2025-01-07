@@ -284,6 +284,7 @@ export async function updateLaporan(data: any) {
       fotoUrl: data.fotoUrl,
       jenis: data.jenis,
       status: data.status,
+      helperId: data.helperId,
     },
   });
   if (laporan) {
